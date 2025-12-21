@@ -1,0 +1,228 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: istio-performance-dashboard
+  namespace: monitor
+  labels:
+    grafana_dashboard: "1"
+data:
+  istio-performance-dashboard.json: |
+    {
+      "annotations": { "list": [] },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "id": null,
+      "links": [],
+      "liveNow": false,
+      "panels": [
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+          "id": 1,
+          "panels": [],
+          "title": "Control Plane Overview",
+          "type": "row"
+        },
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": {
+            "defaults": { "color": { "mode": "palette-classic" }, "mappings": [], "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }, "unit": "short" },
+            "overrides": []
+          },
+          "gridPos": { "h": 6, "w": 6, "x": 0, "y": 1 },
+          "id": 2,
+          "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+          "pluginVersion": "10.0.0",
+          "targets": [{ "datasource": "Prometheus", "expr": "sum(pilot_xds_pushes{type=\"cds\"})", "legendFormat": "CDS Pushes", "refId": "A" }],
+          "title": "Total CDS Pushes",
+          "type": "stat"
+        },
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": {
+            "defaults": { "color": { "mode": "palette-classic" }, "mappings": [], "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }, "unit": "short" },
+            "overrides": []
+          },
+          "gridPos": { "h": 6, "w": 6, "x": 6, "y": 1 },
+          "id": 3,
+          "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+          "pluginVersion": "10.0.0",
+          "targets": [{ "datasource": "Prometheus", "expr": "sum(pilot_xds_pushes{type=\"eds\"})", "legendFormat": "EDS Pushes", "refId": "A" }],
+          "title": "Total EDS Pushes",
+          "type": "stat"
+        },
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": {
+            "defaults": { "color": { "mode": "palette-classic" }, "mappings": [], "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }, "unit": "short" },
+            "overrides": []
+          },
+          "gridPos": { "h": 6, "w": 6, "x": 12, "y": 1 },
+          "id": 4,
+          "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+          "pluginVersion": "10.0.0",
+          "targets": [{ "datasource": "Prometheus", "expr": "sum(pilot_xds)", "legendFormat": "Connected Proxies", "refId": "A" }],
+          "title": "Connected Proxies",
+          "type": "stat"
+        },
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": {
+            "defaults": { "color": { "mode": "thresholds" }, "mappings": [], "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] }, "unit": "short" },
+            "overrides": []
+          },
+          "gridPos": { "h": 6, "w": 6, "x": 18, "y": 1 },
+          "id": 5,
+          "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+          "pluginVersion": "10.0.0",
+          "targets": [{ "datasource": "Prometheus", "expr": "sum(pilot_conflict_inbound_listener) or vector(0)", "legendFormat": "Conflicts", "refId": "A" }],
+          "title": "Config Conflicts",
+          "type": "stat"
+        },
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 7 },
+          "id": 6,
+          "panels": [],
+          "title": "xDS Push Metrics",
+          "type": "row"
+        },
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": { "axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line", "fillOpacity": 10, "gradientMode": "none", "hideFrom": { "legend": false, "tooltip": false, "viz": false }, "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5, "scaleDistribution": { "type": "linear" }, "showPoints": "never", "spanNulls": false, "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" } },
+              "mappings": [],
+              "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+              "unit": "ops"
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "id": 7,
+          "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+          "pluginVersion": "10.0.0",
+          "targets": [{ "datasource": "Prometheus", "expr": "sum(rate(pilot_xds_pushes[5m])) by (type)", "legendFormat": "{{type}}", "refId": "A" }],
+          "title": "xDS Push Rate by Type",
+          "type": "timeseries"
+        },
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": { "axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line", "fillOpacity": 10, "gradientMode": "none", "hideFrom": { "legend": false, "tooltip": false, "viz": false }, "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5, "scaleDistribution": { "type": "linear" }, "showPoints": "never", "spanNulls": false, "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" } },
+              "mappings": [],
+              "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+              "unit": "s"
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+          "id": 8,
+          "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+          "pluginVersion": "10.0.0",
+          "targets": [
+            { "datasource": "Prometheus", "expr": "histogram_quantile(0.50, sum(rate(pilot_xds_push_time_bucket[5m])) by (le))", "legendFormat": "P50", "refId": "A" },
+            { "datasource": "Prometheus", "expr": "histogram_quantile(0.90, sum(rate(pilot_xds_push_time_bucket[5m])) by (le))", "legendFormat": "P90", "refId": "B" },
+            { "datasource": "Prometheus", "expr": "histogram_quantile(0.99, sum(rate(pilot_xds_push_time_bucket[5m])) by (le))", "legendFormat": "P99", "refId": "C" }
+          ],
+          "title": "xDS Push Time",
+          "type": "timeseries"
+        },
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 16 },
+          "id": 9,
+          "panels": [],
+          "title": "Resource Usage",
+          "type": "row"
+        },
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": { "axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line", "fillOpacity": 10, "gradientMode": "none", "hideFrom": { "legend": false, "tooltip": false, "viz": false }, "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5, "scaleDistribution": { "type": "linear" }, "showPoints": "never", "spanNulls": false, "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" } },
+              "mappings": [],
+              "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+              "unit": "percentunit"
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 17 },
+          "id": 10,
+          "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+          "pluginVersion": "10.0.0",
+          "targets": [{ "datasource": "Prometheus", "expr": "rate(process_cpu_seconds_total{app=\"istiod\"}[5m])", "legendFormat": "{{pod}}", "refId": "A" }],
+          "title": "Istiod CPU Usage",
+          "type": "timeseries"
+        },
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": { "axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line", "fillOpacity": 10, "gradientMode": "none", "hideFrom": { "legend": false, "tooltip": false, "viz": false }, "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5, "scaleDistribution": { "type": "linear" }, "showPoints": "never", "spanNulls": false, "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" } },
+              "mappings": [],
+              "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+              "unit": "bytes"
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 17 },
+          "id": 11,
+          "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+          "pluginVersion": "10.0.0",
+          "targets": [{ "datasource": "Prometheus", "expr": "process_resident_memory_bytes{app=\"istiod\"}", "legendFormat": "{{pod}}", "refId": "A" }],
+          "title": "Istiod Memory Usage",
+          "type": "timeseries"
+        },
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 25 },
+          "id": 12,
+          "panels": [],
+          "title": "Proxy Convergence",
+          "type": "row"
+        },
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": { "axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line", "fillOpacity": 10, "gradientMode": "none", "hideFrom": { "legend": false, "tooltip": false, "viz": false }, "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5, "scaleDistribution": { "type": "linear" }, "showPoints": "never", "spanNulls": false, "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" } },
+              "mappings": [],
+              "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+              "unit": "s"
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 26 },
+          "id": 13,
+          "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "right", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+          "pluginVersion": "10.0.0",
+          "targets": [
+            { "datasource": "Prometheus", "expr": "histogram_quantile(0.50, sum(rate(pilot_proxy_convergence_time_bucket[5m])) by (le))", "legendFormat": "P50", "refId": "A" },
+            { "datasource": "Prometheus", "expr": "histogram_quantile(0.90, sum(rate(pilot_proxy_convergence_time_bucket[5m])) by (le))", "legendFormat": "P90", "refId": "B" },
+            { "datasource": "Prometheus", "expr": "histogram_quantile(0.99, sum(rate(pilot_proxy_convergence_time_bucket[5m])) by (le))", "legendFormat": "P99", "refId": "C" }
+          ],
+          "title": "Proxy Convergence Time",
+          "type": "timeseries"
+        }
+      ],
+      "refresh": "30s",
+      "schemaVersion": 38,
+      "style": "dark",
+      "tags": ["istio", "performance", "control-plane"],
+      "templating": { "list": [] },
+      "time": { "from": "now-1h", "to": "now" },
+      "timepicker": {},
+      "timezone": "",
+      "title": "Istio Performance Dashboard",
+      "uid": "istio-performance",
+      "version": 1,
+      "weekStart": ""
+    }

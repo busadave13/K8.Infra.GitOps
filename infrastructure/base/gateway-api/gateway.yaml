@@ -1,0 +1,29 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: gateway-api
+  namespace: istio-ingress
+spec:
+  gatewayClassName: istio
+  listeners:
+    - name: http
+      hostname: "*.local.com"
+      port: 80
+      protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: All
+    - name: tools
+      hostname: "*.tools.com"
+      port: 80
+      protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: All
+    - name: https
+      hostname: "*.local.com"
+      port: 443
+      protocol: HTTPS
+      allowedRoutes:
+        namespaces:
+          from: All

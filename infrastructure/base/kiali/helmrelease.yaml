@@ -1,0 +1,61 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: kiali
+  namespace: flux-system
+spec:
+  releaseName: kiali
+  targetNamespace: istio-system
+  chart:
+    spec:
+      chart: kiali-server
+      sourceRef:
+        kind: HelmRepository
+        name: kiali
+        namespace: flux-system
+  interval: 5m
+  install:
+    createNamespace: false
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    auth:
+      strategy: anonymous
+    external_services:
+      prometheus:
+        url: http://prometheus-server.monitor.svc.cluster.local
+      grafana:
+        enabled: true
+        internal_url: http://grafana.monitor.svc.cluster.local:8080
+        external_url: http://grafana.tools.com
+      istio:
+        root_namespace: istio-system
+        component_status:
+          enabled: true
+          components:
+            - app_label: istiod
+              is_core: true
+              namespace: istio-system
+            - app_label: gateway-api-istio
+              is_core: true
+              namespace: istio-ingress
+      tracing:
+        enabled: false
+    deployment:
+      resources:
+        requests:
+          cpu: 100m
+          memory: 200Mi
+        limits:
+          cpu: 200m
+          memory: 400Mi
+    kiali_feature_flags:
+      ui_defaults:
+        graph:
+          traffic:
+            grpc: requests
+            http: requests
+            tcp: sent

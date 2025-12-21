@@ -1,0 +1,43 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: flagger
+  namespace: flux-system
+spec:
+  interval: 30m
+  releaseName: flagger
+  targetNamespace: flagger-system
+  dependsOn:
+    - name: istiod
+      namespace: flux-system
+    - name: prometheus
+      namespace: monitor
+  chart:
+    spec:
+      chart: flagger
+      version: "1.42.0"
+      sourceRef:
+        kind: HelmRepository
+        name: flagger
+        namespace: flux-system
+  install:
+    createNamespace: false
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    meshProvider: istio
+    metricsServer: http://prometheus-server.monitor.svc.cluster.local
+    slack:
+      user: flagger
+      channel: k8-local-dev
+    env:
+      - name: SLACK_URL
+        valueFrom:
+          secretKeyRef:
+            name: discord-webhook
+            key: address
+    prometheus:
+      enabled: true

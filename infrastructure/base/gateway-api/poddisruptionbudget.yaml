@@ -1,0 +1,11 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: gateway-api-pdb
+  namespace: istio-ingress
+spec:
+  minAvailable: 1
+  selector:
+    # Match the generated Deployment by label
+    matchLabels:
+      gateway.networking.k8s.io/gateway-name: "gateway-api"

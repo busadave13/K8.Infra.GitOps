@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: monitor
+resources:
+  - httproute.yaml
+  - helmrelease.yaml
+  - flagger-dashboard-configmap.yaml
+  - flagger-canary-overview-configmap.yaml
+  - istio-mesh-dashboard-configmap.yaml
+  - istio-service-dashboard-configmap.yaml
+  - istio-workload-dashboard-configmap.yaml
+  - istio-performance-dashboard-configmap.yaml
+  - istio-gateway-dashboard-configmap.yaml
+  - kubernetes-hpa-dashboard-configmap.yaml
+  - kubernetes-pod-health-dashboard-configmap.yaml
+  - kubernetes-app-metrics-dashboard-configmap.yaml
+  - prometheus-alertmanager-dashboard-configmap.yaml

@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: locust-master
+  namespace: locust
+  labels:
+    app: locust
+    component: master
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: locust
+      component: master
+  template:
+    metadata:
+      labels:
+        app: locust
+        component: master
+    spec:
+      containers:
+        - name: locust
+          image: locustio/locust:2.20.1
+          args:
+            - --master
+            - --locustfile=/scripts/locustfile.py
+          ports:
+            - containerPort: 8089
+              name: web
+            - containerPort: 5557
+              name: master
+            - containerPort: 5558
+              name: master-bind
+          env:
+            - name: MOCKERY_HOST
+              value: "http://mockery.mockery.svc.cluster.local"
+            - name: PODINFO_HOST
+              value: "http://podinfo.podinfo.svc.cluster.local:9898"
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8089
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8089
+            initialDelaySeconds: 10
+            periodSeconds: 30
+      volumes:
+        - name: scripts
+          configMap:
+            name: locust-scripts

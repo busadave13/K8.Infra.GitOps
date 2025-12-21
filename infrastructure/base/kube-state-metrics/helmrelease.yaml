@@ -1,0 +1,235 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: kube-state-metrics
+  namespace: flux-system
+spec:
+  releaseName: kube-state-metrics
+  targetNamespace: monitor
+  chart:
+    spec:
+      chart: kube-state-metrics
+      sourceRef:
+        kind: HelmRepository
+        name: prometheus
+        namespace: flux-system
+  interval: 30m
+  install:
+    createNamespace: false
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    prometheusScrape: true
+    serviceMonitor:
+      enabled: false
+    selfMonitor:
+      enabled: false
+    
+    # RBAC for FluxCD custom resources
+    rbac:
+      extraRules:
+        - apiGroups: ["source.toolkit.fluxcd.io"]
+          resources: ["gitrepositories", "helmrepositories", "helmcharts", "buckets", "ocirepositories"]
+          verbs: ["list", "watch"]
+        - apiGroups: ["kustomize.toolkit.fluxcd.io"]
+          resources: ["kustomizations"]
+          verbs: ["list", "watch"]
+        - apiGroups: ["helm.toolkit.fluxcd.io"]
+          resources: ["helmreleases"]
+          verbs: ["list", "watch"]
+        - apiGroups: ["notification.toolkit.fluxcd.io"]
+          resources: ["receivers", "alerts", "providers"]
+          verbs: ["list", "watch"]
+    
+    # Custom resource state metrics for FluxCD
+    customResourceState:
+      enabled: true
+      config:
+        kind: CustomResourceStateMetrics
+        spec:
+          resources:
+            # Kustomization resources
+            - groupVersionKind:
+                group: kustomize.toolkit.fluxcd.io
+                version: v1
+                kind: Kustomization
+              metricNamePrefix: gotk
+              labelsFromPath:
+                name: [metadata, name]
+                namespace: [metadata, namespace]
+              metrics:
+                - name: reconcile_condition
+                  help: "The current condition status of a Kustomization resource"
+                  each:
+                    type: Gauge
+                    gauge:
+                      path: [status, conditions]
+                      valueFrom: [status]
+                      labelsFromPath:
+                        type: [type]
+                        status: [status]
+                  commonLabels:
+                    kind: Kustomization
+                - name: suspend_status
+                  help: "The suspend status of a Kustomization resource"
+                  each:
+                    type: Gauge
+                    gauge:
+                      nilIsZero: true
+                      path: [spec, suspend]
+                  commonLabels:
+                    kind: Kustomization
+            
+            # HelmRelease resources
+            - groupVersionKind:
+                group: helm.toolkit.fluxcd.io
+                version: v2
+                kind: HelmRelease
+              metricNamePrefix: gotk
+              labelsFromPath:
+                name: [metadata, name]
+                namespace: [metadata, namespace]
+              metrics:
+                - name: reconcile_condition
+                  help: "The current condition status of a HelmRelease resource"
+                  each:
+                    type: Gauge
+                    gauge:
+                      path: [status, conditions]
+                      valueFrom: [status]
+                      labelsFromPath:
+                        type: [type]
+                        status: [status]
+                  commonLabels:
+                    kind: HelmRelease
+                - name: suspend_status
+                  help: "The suspend status of a HelmRelease resource"
+                  each:
+                    type: Gauge
+                    gauge:
+                      nilIsZero: true
+                      path: [spec, suspend]
+                  commonLabels:
+                    kind: HelmRelease
+            
+            # GitRepository resources
+            - groupVersionKind:
+                group: source.toolkit.fluxcd.io
+                version: v1
+                kind: GitRepository
+              metricNamePrefix: gotk
+              labelsFromPath:
+                name: [metadata, name]
+                namespace: [metadata, namespace]
+              metrics:
+                - name: reconcile_condition
+                  help: "The current condition status of a GitRepository resource"
+                  each:
+                    type: Gauge
+                    gauge:
+                      path: [status, conditions]
+                      valueFrom: [status]
+                      labelsFromPath:
+                        type: [type]
+                        status: [status]
+                  commonLabels:
+                    kind: GitRepository
+                - name: suspend_status
+                  help: "The suspend status of a GitRepository resource"
+                  each:
+                    type: Gauge
+                    gauge:
+                      nilIsZero: true
+                      path: [spec, suspend]
+                  commonLabels:
+                    kind: GitRepository
+            
+            # HelmRepository resources
+            - groupVersionKind:
+                group: source.toolkit.fluxcd.io
+                version: v1
+                kind: HelmRepository
+              metricNamePrefix: gotk
+              labelsFromPath:
+                name: [metadata, name]
+                namespace: [metadata, namespace]
+              metrics:
+                - name: reconcile_condition
+                  help: "The current condition status of a HelmRepository resource"
+                  each:
+                    type: Gauge
+                    gauge:
+                      path: [status, conditions]
+                      valueFrom: [status]
+                      labelsFromPath:
+                        type: [type]
+                        status: [status]
+                  commonLabels:
+                    kind: HelmRepository
+                - name: suspend_status
+                  help: "The suspend status of a HelmRepository resource"
+                  each:
+                    type: Gauge
+                    gauge:
+                      nilIsZero: true
+                      path: [spec, suspend]
+                  commonLabels:
+                    kind: HelmRepository
+            
+            # HelmChart resources
+            - groupVersionKind:
+                group: source.toolkit.fluxcd.io
+                version: v1
+                kind: HelmChart
+              metricNamePrefix: gotk
+              labelsFromPath:
+                name: [metadata, name]
+                namespace: [metadata, namespace]
+              metrics:
+                - name: reconcile_condition
+                  help: "The current condition status of a HelmChart resource"
+                  each:
+                    type: Gauge
+                    gauge:
+                      path: [status, conditions]
+                      valueFrom: [status]
+                      labelsFromPath:
+                        type: [type]
+                        status: [status]
+                  commonLabels:
+                    kind: HelmChart
+                - name: suspend_status
+                  help: "The suspend status of a HelmChart resource"
+                  each:
+                    type: Gauge
+                    gauge:
+                      nilIsZero: true
+                      path: [spec, suspend]
+                  commonLabels:
+                    kind: HelmChart
+            
+            # Bucket resources
+            - groupVersionKind:
+                group: source.toolkit.fluxcd.io
+                version: v1beta2
+                kind: Bucket
+              metricNamePrefix: gotk
+              labelsFromPath:
+                name: [metadata, name]
+                namespace: [metadata, namespace]
+              metrics:
+                - name: reconcile_condition
+                  help: "The current condition status of a Bucket resource"
+                  each:
+                    type: Gauge
+                    gauge:
+                      path: [status, conditions]
+                      valueFrom: [status]
+                      labelsFromPath:
+                        type: [type]
+                        status: [status]
+                  commonLabels:
+                    kind: Bucket

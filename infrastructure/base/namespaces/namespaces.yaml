@@ -1,0 +1,53 @@
+# Infrastructure Namespaces
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitor
+  labels:
+    istio-injection: disabled
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: istio-system
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: istio-ingress
+  labels:
+    istio-injection: enabled
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: flagger-system
+---
+# Application Namespaces
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mockery
+  labels:
+    istio-injection: enabled
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: podinfo
+  labels:
+    istio-injection: enabled
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: weather
+  labels:
+    istio-injection: enabled
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: locust
+  labels:
+    istio-injection: enabled

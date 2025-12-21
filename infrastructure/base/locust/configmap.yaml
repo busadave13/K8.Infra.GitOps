@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: locust-scripts
+  namespace: locust
+data:
+  locustfile.py: |
+    from locust import HttpUser, task, between, constant_throughput
+    import os
+
+    # Target configuration from environment or defaults
+    # Using Flagger-managed services for proper load distribution
+    MOCKERY_HOST = os.getenv("MOCKERY_HOST", "http://mockery.mockery.svc.cluster.local")
+    PODINFO_HOST = os.getenv("PODINFO_HOST", "http://podinfo.podinfo.svc.cluster.local:9898")
+
+    class MockeryUser(HttpUser):
+        """Load test for Mockery API"""
+        
+        host = MOCKERY_HOST
+        wait_time = constant_throughput(10)  # 10 requests per second per user
+        weight = 3  # Higher weight = more users assigned to this class
+        
+        @task(10)
+        def get_mock(self):
+            """Test the mock endpoint"""
+            self.client.get(
+                "/api/mock",
+                headers={"X-Mock-ID": "weather/prod/success"},
+                name="/api/mock"
+            )
+        
+        @task(1)
+        def health_check(self):
+            """Test the health endpoint"""
+            self.client.get("/health", name="/health")
+
+    class PodinfoUser(HttpUser):
+        """Load test for Podinfo API"""
+        
+        host = PODINFO_HOST
+        wait_time = constant_throughput(5)  # 5 requests per second per user
+        weight = 1  # Lower weight = fewer users assigned to this class
+        
+        @task(10)
+        def get_root(self):
+            """Test the root endpoint"""
+            self.client.get(
+                "/",
+                headers={"Accept": "application/json"},
+                name="/"
+            )
+        
+        @task(3)
+        def get_version(self):
+            """Test the version endpoint"""
+            self.client.get("/version", name="/version")
+        
+        @task(2)
+        def get_env(self):
+            """Test the env endpoint"""
+            self.client.get("/env", name="/env")
+        
+        @task(1)
+        def healthz(self):
+            """Test the health endpoint"""
+            self.client.get("/healthz", name="/healthz")

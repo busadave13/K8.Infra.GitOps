@@ -1,0 +1,36 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: aspire
+  namespace: flux-system
+spec:
+  releaseName: aspire
+  targetNamespace: monitor
+  chart:
+    spec:
+      chart: aspire-dashboard
+      version: "1.17.0" # Update to desired version or use ">= 1.0.0" for auto-updates
+      sourceRef:
+        kind: HelmRepository
+        name: aspire
+        namespace: flux-system
+  interval: 5m
+  install:
+    createNamespace: false
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  # values:
+  # Add your custom values here
+  # Example values (check the chart's values.yaml for all options):
+  # replicaCount: 1
+  # image:
+  #   repository: mcr.microsoft.com/dotnet/aspire-dashboard
+  #   tag: "9.0"
+  # service:
+  #   type: ClusterIP
+  #   port: 18888
+  # ingress:
+  #   enabled: false

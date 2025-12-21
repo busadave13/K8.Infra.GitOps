@@ -1,0 +1,49 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: grafana
+  namespace: flux-system
+spec:
+  releaseName: grafana
+  targetNamespace: monitor
+  chart:
+    spec:
+      chart: grafana
+      sourceRef:
+        kind: HelmRepository
+        name: grafana
+        namespace: flux-system
+  interval: 5m
+  install:
+    createNamespace: false
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    adminUser: admin
+    adminPassword: admin
+    service:
+      port: 8080
+    datasources:
+      datasources.yaml:
+        apiVersion: 1
+        datasources:
+          - name: Prometheus
+            type: prometheus
+            access: proxy
+            url: http://prometheus-server.monitor.svc.cluster.local
+            isDefault: true
+            jsonData:
+              timeInterval: "5s"
+
+    sidecar:
+      dashboards:
+        enabled: true
+        label: grafana_dashboard
+        labelValue: "1"
+        searchNamespace: ALL
+        folder: /tmp/dashboards
+        provider:
+          foldersFromFilesStructure: true

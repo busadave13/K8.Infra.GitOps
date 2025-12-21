@@ -1,0 +1,287 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: prometheus
+  namespace: flux-system
+spec:
+  releaseName: prometheus
+  targetNamespace: monitor
+  chart:
+    spec:
+      chart: prometheus
+      sourceRef:
+        kind: HelmRepository
+        name: prometheus
+        namespace: flux-system
+  interval: 5m
+  install:
+    createNamespace: false
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    # Enable AlertManager
+    alertmanager:
+      enabled: true
+      persistence:
+        enabled: false
+      extraSecretMounts:
+        - name: alertmanager-discord
+          mountPath: /etc/alertmanager/secrets/alertmanager-discord
+          secretName: alertmanager-discord
+          readOnly: true
+      # AlertManager configuration (for alertmanager subchart)
+      config:
+        global:
+          resolve_timeout: 5m
+        route:
+          group_by: ['alertname', 'namespace']
+          group_wait: 10s
+          group_interval: 5m
+          repeat_interval: 4h
+          receiver: 'discord'
+          routes:
+            - match:
+                severity: critical
+              receiver: 'discord'
+        receivers:
+          - name: 'discord'
+            discord_configs:
+              - webhook_url_file: /etc/alertmanager/secrets/alertmanager-discord/webhook-url
+
+    server:
+      extraArgs:
+        log.level: info
+
+    # Alert Rules
+    serverFiles:
+      alerting_rules.yml:
+        groups:
+          - name: gateway-reliability
+            rules:
+              - alert: GatewayAPILowSuccessRate
+                expr: |
+                  (
+                    sum(rate(istio_requests_total{reporter="source", source_workload_namespace="istio-ingress", response_code!~"5.*"}[5m]))
+                    /
+                    sum(rate(istio_requests_total{reporter="source", source_workload_namespace="istio-ingress"}[5m]))
+                  ) * 100 < 99
+                for: 2m
+                labels:
+                  severity: critical
+                  component: gateway
+                annotations:
+                  summary: "Gateway API success rate below 99%"
+                  description: "Gateway API success rate is {{ $value | printf \"%.2f\" }}% over the last 5 minutes"
+
+          - name: podinfo-reliability
+            rules:
+              - alert: PodinfoLowSuccessRate
+                expr: |
+                  (
+                    sum(rate(istio_requests_total{destination_service_name=~"podinfo(-primary)?", response_code=~"2..", job="kubernetes-pods", reporter="destination"}[5m]))
+                    /
+                    sum(rate(istio_requests_total{destination_service_name=~"podinfo(-primary)?", job="kubernetes-pods", reporter="destination"}[5m]))
+                  ) < 0.99
+                for: 1m
+                labels:
+                  severity: critical
+                  service: podinfo
+                annotations:
+                  summary: "Podinfo success rate below 99%"
+                  description: "Podinfo service success rate is {{ $value | humanizePercentage }} over the last 5 minutes"
+
+              - alert: PodinfoHighLatency
+                expr: |
+                  histogram_quantile(0.95, 
+                    sum(rate(istio_request_duration_milliseconds_bucket{destination_service_name=~"podinfo(-primary)?", job="kubernetes-pods", reporter="destination"}[5m])) by (le)
+                  ) > 500
+                for: 1m
+                labels:
+                  severity: warning
+                  service: podinfo
+                annotations:
+                  summary: "Podinfo p95 latency above 500ms"
+                  description: "Podinfo p95 latency is {{ $value | printf \"%.0f\" }}ms over the last 5 minutes"
+
+          - name: mockery-reliability
+            rules:
+              - alert: MockeryLowSuccessRate
+                expr: |
+                  (
+                    sum(rate(istio_requests_total{destination_service_name=~"mockery(-primary)?", response_code=~"2..", job="kubernetes-pods", reporter="destination"}[5m]))
+                    /
+                    sum(rate(istio_requests_total{destination_service_name=~"mockery(-primary)?", job="kubernetes-pods", reporter="destination"}[5m]))
+                  ) < 0.60
+                for: 2m
+                labels:
+                  severity: critical
+                  service: mockery
+                annotations:
+                  summary: "Mockery success rate below 60%"
+                  description: "Mockery service success rate is {{ $value | humanizePercentage }} over the last 5 minutes"
+
+              - alert: MockeryHighLatency
+                expr: |
+                  histogram_quantile(0.95, 
+                    sum(rate(istio_request_duration_milliseconds_bucket{destination_service_name=~"mockery(-primary)?", job="kubernetes-pods", reporter="destination"}[5m])) by (le)
+                  ) > 1000
+                for: 1m
+                labels:
+                  severity: warning
+                  service: mockery
+                annotations:
+                  summary: "Mockery p95 latency above 1000ms"
+                  description: "Mockery p95 latency is {{ $value | printf \"%.0f\" }}ms over the last 5 minutes"
+
+          - name: weather-reliability
+            rules:
+              - alert: WeatherLowSuccessRate
+                expr: |
+                  (
+                    sum(rate(istio_requests_total{destination_service_name=~"weather(-primary)?", response_code=~"2..", job="kubernetes-pods", reporter="destination"}[5m]))
+                    /
+                    sum(rate(istio_requests_total{destination_service_name=~"weather(-primary)?", job="kubernetes-pods", reporter="destination"}[5m]))
+                  ) < 0.99
+                for: 1m
+                labels:
+                  severity: critical
+                  service: weather
+                annotations:
+                  summary: "Weather success rate below 99%"
+                  description: "Weather service success rate is {{ $value | humanizePercentage }} over the last 5 minutes"
+
+              - alert: WeatherHighLatency
+                expr: |
+                  histogram_quantile(0.95, 
+                    sum(rate(istio_request_duration_milliseconds_bucket{destination_service_name=~"weather(-primary)?", job="kubernetes-pods", reporter="destination"}[5m])) by (le)
+                  ) > 500
+                for: 1m
+                labels:
+                  severity: warning
+                  service: weather
+                annotations:
+                  summary: "Weather p95 latency above 500ms"
+                  description: "Weather p95 latency is {{ $value | printf \"%.0f\" }}ms over the last 5 minutes"
+      prometheus.yml:
+        scrape_configs:
+          # Scrape kubelet cadvisor for container metrics (CPU, memory, etc.)
+          - job_name: 'kubernetes-nodes-cadvisor'
+            scheme: https
+            tls_config:
+              ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+              insecure_skip_verify: true
+            bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+            kubernetes_sd_configs:
+              - role: node
+            relabel_configs:
+              - action: labelmap
+                regex: __meta_kubernetes_node_label_(.+)
+              - target_label: __address__
+                replacement: kubernetes.default.svc:443
+              - source_labels: [__meta_kubernetes_node_name]
+                regex: (.+)
+                target_label: __metrics_path__
+                replacement: /api/v1/nodes/${1}/proxy/metrics/cadvisor
+            metric_relabel_configs:
+              - source_labels: [namespace]
+                action: keep
+                regex: .+
+              - source_labels: [pod]
+                action: keep
+                regex: .+
+
+          # Scrape istiod control plane
+          - job_name: 'istiod'
+            kubernetes_sd_configs:
+              - role: endpoints
+                namespaces:
+                  names:
+                    - istio-system
+            relabel_configs:
+              - source_labels: [__meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+                action: keep
+                regex: istiod;http-monitoring
+
+          # Scrape Istio sidecar proxies (Envoy)
+          - job_name: 'envoy-stats'
+            metrics_path: /stats/prometheus
+            kubernetes_sd_configs:
+              - role: pod
+            relabel_configs:
+              # Only scrape pods with Istio sidecar
+              - source_labels: [__meta_kubernetes_pod_container_name]
+                action: keep
+                regex: istio-proxy
+              - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+                action: drop
+                regex: false
+              - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+                action: replace
+                regex: ([^:]+)(?::\d+)?;(\d+)
+                replacement: $1:15090
+                target_label: __address__
+              - source_labels: [__meta_kubernetes_namespace]
+                target_label: namespace
+              - source_labels: [__meta_kubernetes_pod_name]
+                target_label: pod_name
+              - source_labels: [__meta_kubernetes_pod_label_app]
+                target_label: app
+
+          # Scrape Istio ingress gateway
+          - job_name: 'istio-ingress-gateway'
+            metrics_path: /stats/prometheus
+            kubernetes_sd_configs:
+              - role: pod
+                namespaces:
+                  names:
+                    - istio-ingress
+            relabel_configs:
+              - source_labels: [__meta_kubernetes_pod_container_name]
+                action: keep
+                regex: istio-proxy
+              - source_labels: [__address__]
+                action: replace
+                regex: ([^:]+)(?::\d+)?
+                replacement: $1:15090
+                target_label: __address__
+              - source_labels: [__meta_kubernetes_namespace]
+                target_label: namespace
+              - source_labels: [__meta_kubernetes_pod_name]
+                target_label: pod_name
+
+          # Scrape kube-state-metrics for FluxCD custom resource metrics
+          - job_name: 'kube-state-metrics'
+            static_configs:
+              - targets:
+                  - kube-state-metrics.monitor.svc.cluster.local:8080
+
+          # Scrape Prometheus Alertmanager metrics
+          - job_name: 'prometheus-alertmanager'
+            static_configs:
+              - targets:
+                  - prometheus-alertmanager.monitor.svc.cluster.local:9093
+
+          # Scrape application pods with prometheus annotations
+          - job_name: 'kubernetes-pods'
+            kubernetes_sd_configs:
+              - role: pod
+            relabel_configs:
+              - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+                action: keep
+                regex: true
+              - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+                action: replace
+                target_label: __metrics_path__
+                regex: (.+)
+              - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+                action: replace
+                regex: ([^:]+)(?::\d+)?;(\d+)
+                replacement: $1:$2
+                target_label: __address__
+              - source_labels: [__meta_kubernetes_namespace]
+                target_label: namespace
+              - source_labels: [__meta_kubernetes_pod_name]
+                target_label: pod
