@@ -5,6 +5,7 @@ resources:
   - namespaces
   - crds
   - metrics-server
+  - vpa
   - istio-cni
   - istio-base
   - istiod

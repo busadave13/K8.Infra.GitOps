@@ -1,0 +1,34 @@
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: podinfo-vpa
+spec:
+  # Target the Flagger-managed primary deployment
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: podinfo-primary
+  # "Off" mode - VPA only provides recommendations, does not apply them
+  # Recommendations can be viewed via:
+  #   kubectl get vpa podinfo-vpa -n podinfo -o yaml
+  #   kubectl describe vpa podinfo-vpa -n podinfo
+  updatePolicy:
+    updateMode: "Off"
+  # Resource policy defines min/max bounds for recommendations
+  resourcePolicy:
+    containerPolicies:
+      - containerName: podinfod
+        # Minimum resources (prevents recommendations from going too low)
+        minAllowed:
+          cpu: 50m
+          memory: 32Mi
+        # Maximum resources (prevents recommendations from going too high)
+        maxAllowed:
+          cpu: 2
+          memory: 1Gi
+        # Control which resources VPA can recommend
+        controlledResources:
+          - cpu
+          - memory
+        # Scaling mode for each resource
+        controlledValues: RequestsAndLimits

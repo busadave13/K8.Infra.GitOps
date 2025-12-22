@@ -9,3 +9,4 @@ resources:
   - aspire-helm.yaml
   - grafana-helm.yaml
   - flagger-helm.yaml
+  - vpa-helm.yaml

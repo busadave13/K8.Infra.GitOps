@@ -6,7 +6,22 @@ Maintaining and improving the local Kubernetes development environment with GitO
 ## Recently Completed
 
 ### 2025-12-16
-1. **Added Alertmanager Web UI HTTPRoute**
+1. **Added Vertical Pod Autoscaler (VPA) Support**
+   - Deployed VPA using Fairwinds Stable Helm chart
+   - Created `infrastructure/base/vpa/` with HelmRelease
+   - VPA Recommender enabled (analyzes resource usage)
+   - VPA Updater and Admission Controller disabled (Off mode)
+   - Added VPA for podinfo in "Off" mode (recommendations only)
+   - Removed HPA from podinfo (replaced with VPA)
+   - Created VPA Grafana dashboard showing:
+     - CPU/Memory target recommendations
+     - Lower/Upper bounds
+     - Current requests vs actual usage
+     - All VPAs overview table
+   - Access at: http://grafana.tools.com → Dashboards → Kubernetes / Vertical Pod Autoscaler
+   - View recommendations: `kubectl get vpa podinfo-vpa -n podinfo -o yaml`
+
+2. **Added Alertmanager Web UI HTTPRoute**
    - Created `infrastructure/base/prometheus/alertmanager-httproute.yaml`
    - Routes to `alertmanager.tools.com` on port 80
    - Backend: `prometheus-alertmanager` service on port 9093

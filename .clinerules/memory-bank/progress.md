@@ -4,7 +4,34 @@
 
 ### 2025-12-16
 
-1. **Added Alertmanager Web UI HTTPRoute**
+1. **Added Vertical Pod Autoscaler (VPA) Support**
+   - Created `infrastructure/base/.repositories/vpa-helm.yaml` (Fairwinds Stable Helm repo)
+   - Updated `infrastructure/base/.repositories/kustomization.yaml` to include VPA repo
+   - Created `infrastructure/base/vpa/helmrelease.yaml` with:
+     - VPA Recommender enabled (analyzes resource usage)
+     - VPA Updater disabled (Off mode - no automatic updates)
+     - VPA Admission Controller disabled (Off mode)
+   - Created `infrastructure/base/vpa/kustomization.yaml`
+   - Updated `infrastructure/base/kustomization.yaml` to include VPA
+   - Created `apps/base/podinfo/verticalpodautoscaler.yaml`:
+     - Targets `podinfo-primary` deployment (Flagger-managed)
+     - Mode: `Off` (recommendations only)
+     - Container: `podinfod`
+     - CPU bounds: 50m - 2 cores
+     - Memory bounds: 32Mi - 1Gi
+   - Removed `apps/base/podinfo/horizontalpodautoscaler.yaml` (replaced with VPA)
+   - Updated `apps/base/podinfo/kustomization.yaml` to use VPA instead of HPA
+   - Created `infrastructure/base/grafana/vpa-dashboard-configmap.yaml`:
+     - VPA Overview: Containers monitored, update mode, total VPAs
+     - CPU Recommendations: Target, lower/upper bounds, current request, actual usage
+     - Memory Recommendations: Target, lower/upper bounds, current request, actual usage
+     - All VPAs Overview table
+     - Dropdown filters: Namespace, VPA, Container, Target Deployment
+   - Updated `infrastructure/base/grafana/kustomization.yaml` to include VPA dashboard
+   - Access at: http://grafana.tools.com → Dashboards → Kubernetes / Vertical Pod Autoscaler
+   - View recommendations: `kubectl get vpa podinfo-vpa -n podinfo -o yaml`
+
+2. **Added Alertmanager Web UI HTTPRoute**
    - Created `infrastructure/base/prometheus/alertmanager-httproute.yaml`
    - Routes `alertmanager.tools.com` to `prometheus-alertmanager` service on port 9093
    - Updated `infrastructure/base/prometheus/kustomization.yaml` to include new HTTPRoute
