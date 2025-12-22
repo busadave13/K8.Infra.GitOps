@@ -14,8 +14,8 @@ spec:
   wait: true
   dependsOn:
     - name: ingress
-  healthChecks:
-    - apiVersion: gateway.networking.k8s.io/v1
-      kind: Gateway
-      name: gateway-api
-      namespace: istio-ingress
+  # healthChecks:
+  #   - apiVersion: gateway.networking.k8s.io/v1
+  #     kind: Gateway
+  #     name: gateway-api
+  #     namespace: istio-ingress
