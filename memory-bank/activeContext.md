@@ -1,9 +1,18 @@
 # Active Context
 
 ## Current Focus
-Maintaining and improving the local Kubernetes development environment with GitOps, canary deployments, and observability.
+Maintaining and improving the local Kubernetes development environment with GitOps, canary deployments, and observability. Added staging environment support for multi-cluster GitOps.
 
 ## Recently Completed
+
+### 2025-12-21
+1. **Added Staging Environment to GitOps Cluster**
+   - Created `clusters/staging/` with apps.yaml, infrastructure.yaml, flagger-config.yaml, ingress.yaml
+   - Created `infrastructure/staging/` with minimal infrastructure (namespaces, CRDs, istio-base, istiod)
+   - Created `apps/staging/kustomization.yaml` with all apps enabled
+   - Fixed YAML indentation issues
+   - Fixed Gateway healthChecks (changed from non-existent `waypoint` to actual `gateway-api`)
+   - All kustomize builds pass validation
 
 ### 2025-12-16
 1. **Added Vertical Pod Autoscaler (VPA) Support**
