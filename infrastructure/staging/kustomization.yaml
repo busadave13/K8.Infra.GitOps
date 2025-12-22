@@ -11,7 +11,7 @@ resources:
   #- ../base/prometheus
   #- ../base/prometheus-adapter
   #- ../base/kube-state-metrics
-  - ../base/flagger
+  #- ../base/flagger
   #- ../base/grafana
   #- ../base/kiali
   #- ../base/aspire
