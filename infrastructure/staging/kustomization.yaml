@@ -8,12 +8,10 @@ resources:
   - ../base/istio-base
   - ../base/istiod
   #- ../base/metrics-server
-  #- ../base/vpa
-  #- ../base/istio-cni
   #- ../base/prometheus
   #- ../base/prometheus-adapter
   #- ../base/kube-state-metrics
-  #- ../base/flagger
+  - ../base/flagger
   #- ../base/grafana
   #- ../base/kiali
   #- ../base/aspire

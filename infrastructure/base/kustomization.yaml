@@ -1,12 +1,12 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - .repositories
+  - repos
   - namespaces
   - crds
   - metrics-server
   - vpa
-  - istio-cni
+  #- istio-cni
   - istio-base
   - istiod
   - prometheus
