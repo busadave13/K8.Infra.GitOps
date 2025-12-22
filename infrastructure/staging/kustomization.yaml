@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  #- ../base
+  - ../base/.repositories
+  - ../base/namespaces
+  - ../base/crds
+  - ../base/istio-base
+  - ../base/istiod
+  #- ../base/metrics-server
+  #- ../base/vpa
+  #- ../base/istio-cni
+  #- ../base/prometheus
+  #- ../base/prometheus-adapter
+  #- ../base/kube-state-metrics
+  #- ../base/flagger
+  #- ../base/grafana
+  #- ../base/kiali
+  #- ../base/aspire
+  #- ../base/locust
+# patches:
+#   - path: ./patches/istio-ingress-patch.yaml

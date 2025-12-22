@@ -2,6 +2,33 @@
 
 ## Completed Tasks
 
+### 2025-12-21
+
+1. **Added Staging Environment to GitOps Cluster**
+   - Created `clusters/staging/` directory with:
+     - `apps.yaml` - Kustomization for apps/staging
+     - `infrastructure.yaml` - Kustomization for infrastructure/staging
+     - `flagger-config.yaml` - Flagger metric templates
+     - `ingress.yaml` - Gateway API configuration
+   - Created `infrastructure/staging/` directory with:
+     - `kustomization.yaml` - Minimal infrastructure (namespaces, CRDs, istio-base, istiod)
+     - `patches/istio-ingress-patch.yaml` - Resource limits for staging
+   - Created `apps/staging/kustomization.yaml` - All apps enabled (fluxcd, weather, mockery, podinfo)
+
+2. **Fixed Staging Configuration Issues**
+   - Fixed YAML indentation in `infrastructure/staging/kustomization.yaml`
+   - Commented out healthChecks for disabled HelmReleases in `clusters/staging/infrastructure.yaml`
+   - Fixed incorrect Gateway healthCheck in `clusters/staging/apps.yaml`:
+     - Changed from `name: waypoint, namespace: podinfo` (non-existent)
+     - To `name: gateway-api, namespace: istio-ingress` (actual Gateway)
+   - Also fixed same Gateway healthCheck issue in `clusters/dev/apps.yaml` for consistency
+
+3. **Verified All Kustomize Builds Pass**
+   - `kubectl kustomize infrastructure/staging` ✅
+   - `kubectl kustomize apps/staging` ✅
+   - `kubectl kustomize infrastructure/base/gateway-api` ✅
+   - `kubectl kustomize infrastructure/base/flagger/metric-templates` ✅
+
 ### 2025-12-16
 
 1. **Added Vertical Pod Autoscaler (VPA) Support**
