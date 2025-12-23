@@ -3,7 +3,7 @@ kind: Kustomization
 resources:
   #- ../base
   #- ../base/repos
-  - ../base/repos/istio-helm.yaml
+  - ../base/repository/istio-helm.yaml
   - ../base/namespaces
   - ../base/crds
   - ../base/istio-base
