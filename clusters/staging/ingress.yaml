@@ -13,4 +13,4 @@ spec:
   wait: true
   dependsOn:
     - name: infrastructure
-    - name: flagger-config
+    #- name: flagger-config
