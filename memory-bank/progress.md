@@ -2,6 +2,22 @@
 
 ## Completed Tasks
 
+### 2025-12-22
+
+1. **Fixed Istio HelmRepository Namespace Issue**
+   - Issue: Flux reconciliation failed with "HelmRepository/istio namespace not specified"
+   - Root cause: `infrastructure/staging/kustomization.yaml` directly referenced `../base/repository/istio-helm.yaml` instead of through the parent kustomization, bypassing the namespace setting
+   - Fix: Added `namespace: flux-system` explicitly to `infrastructure/base/repository/istio-helm.yaml` metadata
+   - File modified: `infrastructure/base/repository/istio-helm.yaml`
+
+2. **Added Timeout Settings to Istio HelmReleases**
+   - Issue: istiod installation failed with "context deadline exceeded" (default 5m timeout)
+   - Fix: Added `timeout: 10m` to install and upgrade sections of both Istio HelmReleases
+   - Files modified:
+     - `infrastructure/base/istio-base/helmrelease.yaml` - Added 10m timeout
+     - `infrastructure/base/istiod/helmrelease.yaml` - Added 10m timeout
+   - Rationale: Istio components can take longer to initialize (CRDs, webhooks, image pulls)
+
 ### 2025-12-21
 
 1. **Added Staging Environment to GitOps Cluster**
