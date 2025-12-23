@@ -1,0 +1,21 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: gateway-api
+  namespace: istio-ingress
+spec:
+  gatewayClassName: istio
+  # Infrastructure configuration for the auto-provisioned gateway service
+  infrastructure:
+    annotations:
+      # AKS-specific annotations for static IP and resource group
+      service.beta.kubernetes.io/azure-load-balancer-resource-group: "rg-xpci-staging-wus2"
+      service.beta.kubernetes.io/azure-load-balancer-ipv4: "4.155.149.229"
+  listeners:
+    - name: http
+      hostname: "davhar.westus2.cloudapp.azure.com"
+      port: 80
+      protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: All

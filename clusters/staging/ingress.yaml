@@ -5,7 +5,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 10m
-  path: ./infrastructure/base/gateway-api
+  path: ./infrastructure/staging/gateway-api
   sourceRef:
     kind: GitRepository
     name: flux-system

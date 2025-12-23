@@ -2,6 +2,23 @@
 
 ## Completed Tasks
 
+### 2025-12-23
+
+1. **Configured Staging Gateway API for AKS with Static IP**
+   - Created staging-specific Gateway API configuration for AKS
+   - Files created:
+     - `infrastructure/staging/gateway-api/gateway.yaml` - Gateway with AKS LoadBalancer annotations
+     - `infrastructure/staging/gateway-api/kustomization.yaml` - Includes gateway, HPA, and PDB
+     - `infrastructure/staging/gateway-api/horizontalpodautoscaler.yaml` - HPA for gateway pods
+     - `infrastructure/staging/gateway-api/poddisruptionbudget.yaml` - PDB for gateway pods
+   - Configuration:
+     - Static IP: `4.155.149.229`
+     - Resource Group: `rg-xpci-staging-wus2`
+     - Hostname: `davhar.westus2.cloudapp.azure.com` (exact match)
+     - HTTP listener on port 80
+   - Used Gateway API `infrastructure.annotations` field (Istio 1.22+) to configure LoadBalancer service annotations
+   - Updated `clusters/staging/ingress.yaml` to point to `./infrastructure/staging/gateway-api` instead of base
+
 ### 2025-12-22
 
 1. **Fixed Istio HelmRepository Namespace Issue**
@@ -25,11 +42,13 @@
    - Files modified:
      - `infrastructure/base/istio-base/helmrelease.yaml` - Added `releaseName: istio-base`
      - `infrastructure/base/istiod/helmrelease.yaml` - Added `releaseName: istiod`
-   - Note: After pushing these changes, failed Helm releases need manual cleanup:
-     ```bash
-     helm uninstall istio-system-istiod -n istio-system
-     helm uninstall istio-system-istio-base -n istio-system
-     ```
+
+4. **Resolved Staging Cluster Pod Capacity Issue**
+   - Issue: istiod pod stuck in Pending with "Too many pods" (30/30 pods on single node)
+   - Root cause: AKS staging cluster had only 1 node with maxPods=30
+   - Resolution: Scaled nodepool from 1 to 2 nodes
+   - Command used: `az aks nodepool scale --resource-group rg-xpci-staging-wus2 --cluster-name aks-xpci-staging-wus2 --name system --node-count 2`
+   - Result: All HelmReleases and Kustomizations now Ready
 
 ### 2025-12-21
 
