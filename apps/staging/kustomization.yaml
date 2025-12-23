@@ -7,3 +7,9 @@ resources:
   #- ../base/weather
   #- ../base/mockery
   - ../base/podinfo
+
+patches:
+  - path: patches/podinfo-httproute-patch.yaml
+    target:
+      kind: HTTPRoute
+      name: podinfo
