@@ -18,6 +18,19 @@
      - `infrastructure/base/istiod/helmrelease.yaml` - Added 10m timeout
    - Rationale: Istio components can take longer to initialize (CRDs, webhooks, image pulls)
 
+3. **Added Explicit releaseName to Istio HelmReleases**
+   - Issue: Helm releases were created with namespace-prefixed names (`istio-system-istiod`) instead of simple names
+   - This caused confusion and made rollbacks fail with "MissingRollbackTarget"
+   - Fix: Added `releaseName` field to explicitly control Helm release names
+   - Files modified:
+     - `infrastructure/base/istio-base/helmrelease.yaml` - Added `releaseName: istio-base`
+     - `infrastructure/base/istiod/helmrelease.yaml` - Added `releaseName: istiod`
+   - Note: After pushing these changes, failed Helm releases need manual cleanup:
+     ```bash
+     helm uninstall istio-system-istiod -n istio-system
+     helm uninstall istio-system-istio-base -n istio-system
+     ```
+
 ### 2025-12-21
 
 1. **Added Staging Environment to GitOps Cluster**

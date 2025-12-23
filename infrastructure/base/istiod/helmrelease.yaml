@@ -5,6 +5,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 30m
+  releaseName: istiod
   targetNamespace: istio-system
   dependsOn:
     - name: istio-base

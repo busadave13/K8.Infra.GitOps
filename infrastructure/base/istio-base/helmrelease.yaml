@@ -5,6 +5,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 30m
+  releaseName: istio-base
   targetNamespace: istio-system
   chart:
     spec:
