@@ -11,6 +11,12 @@ spec:
       # AKS-specific annotations for static IP and resource group
       service.beta.kubernetes.io/azure-load-balancer-resource-group: "rg-xpci-staging-wus2"
       service.beta.kubernetes.io/azure-load-balancer-ipv4: "4.155.149.229"
+      # Health probe configuration for Azure Load Balancer
+      # The Istio gateway status port (15021) provides /healthz/ready endpoint
+      service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path: "/healthz/ready"
+      service.beta.kubernetes.io/port_80_health-probe_port: "15021"
+      service.beta.kubernetes.io/port_80_health-probe_protocol: "http"
+      service.beta.kubernetes.io/port_80_health-probe_request-path: "/healthz/ready"
   listeners:
     - name: http
       hostname: "davhar.westus2.cloudapp.azure.com"
