@@ -2,6 +2,32 @@
 
 ## Completed Tasks
 
+### 2025-12-24
+
+1. **Configured Flagger for Azure Managed Prometheus (Staging)**
+   - Issue: Flagger HelmRelease failed with "helmreleases.helm.toolkit.fluxcd.io 'prometheus' not found"
+   - Root cause: Flagger had dependency on self-managed Prometheus HelmRelease which doesn't exist in staging (uses Azure Managed Prometheus)
+   - Solution: Created staging-specific Flagger configuration with Azure Managed Prometheus integration
+   - Files created:
+     - `infrastructure/staging/flagger/kustomization.yaml` - Patches base Flagger for staging
+     - `infrastructure/staging/flagger/helmrelease-patch.yaml` - Removes Prometheus dependency, configures Azure endpoint
+     - `infrastructure/staging/flagger/serviceaccount.yaml` - ServiceAccount with Workload Identity annotations
+     - `infrastructure/staging/flagger/metric-templates/kustomization.yaml` - Staging metric templates
+     - `infrastructure/staging/flagger/metric-templates/request-success-rate.yaml` - Points to Azure Managed Prometheus
+     - `infrastructure/staging/flagger/metric-templates/request-duration.yaml` - Points to Azure Managed Prometheus
+   - Files modified:
+     - `infrastructure/staging/kustomization.yaml` - Added flagger to resources
+     - `clusters/staging/flagger-config.yaml` - Updated path to staging metric templates
+   - Configuration:
+     - Azure Managed Prometheus endpoint: `https://amw-azr-staging-wus2-apa7cuf8ddhwhrfr.westus2.prometheus.monitor.azure.com`
+     - ServiceAccount: `flagger-sa` with Azure Workload Identity
+     - Requires Azure Managed Identity with "Monitoring Data Reader" role
+   - Azure Setup Required (manual):
+     - Create Managed Identity: `flagger-azr-staging-wus2`
+     - Assign "Monitoring Data Reader" role on Azure Monitor Workspace
+     - Create Federated Credential for `flagger-system:flagger-sa`
+     - Update `<FLAGGER_MANAGED_IDENTITY_CLIENT_ID>` placeholder in serviceaccount.yaml
+
 ### 2025-12-23
 
 1. **Configured Staging Gateway API for AKS with Static IP**

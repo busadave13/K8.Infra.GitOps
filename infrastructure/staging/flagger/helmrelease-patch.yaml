@@ -1,0 +1,20 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: flagger
+  namespace: flux-system
+spec:
+  # Remove prometheus dependency - using Azure Managed Prometheus
+  dependsOn:
+    - name: istiod
+      namespace: flux-system
+  values:
+    # Use Azure Managed Prometheus endpoint
+    metricsServer: https://amw-azr-staging-wus2-apa7cuf8ddhwhrfr.westus2.prometheus.monitor.azure.com
+    # Configure ServiceAccount for Workload Identity
+    serviceAccount:
+      create: false
+      name: flagger-sa
+    # Disable built-in prometheus since we're using Azure Managed Prometheus
+    prometheus:
+      enabled: false

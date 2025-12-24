@@ -1,0 +1,22 @@
+apiVersion: flagger.app/v1beta1
+kind: MetricTemplate
+metadata:
+  name: request-duration
+  namespace: flagger-system
+spec:
+  provider:
+    type: prometheus
+    address: https://amw-azr-staging-wus2-apa7cuf8ddhwhrfr.westus2.prometheus.monitor.azure.com
+  query: |
+    histogram_quantile(
+      0.99,
+      sum(
+        rate(
+          istio_request_duration_milliseconds_bucket{
+            reporter="destination",
+            destination_workload_namespace="{{ namespace }}",
+            destination_workload=~"{{ target }}"
+          }[5m]
+        )
+      ) by (le)
+    )

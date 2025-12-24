@@ -7,7 +7,8 @@ spec:
   interval: 10m
   retryInterval: 1m
   timeout: 5m
-  path: ./infrastructure/base/flagger/metric-templates
+  # Use staging-specific metric templates with Azure Managed Prometheus
+  path: ./infrastructure/staging/flagger/metric-templates
   sourceRef:
     kind: GitRepository
     name: flux-system
@@ -15,8 +16,8 @@ spec:
   wait: true
   dependsOn:
     - name: infrastructure
-healthChecks:
-  - apiVersion: apps/v1
-    kind: Deployment
-    name: flagger
-    namespace: flagger-system
+  healthChecks:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: flagger
+      namespace: flagger-system
