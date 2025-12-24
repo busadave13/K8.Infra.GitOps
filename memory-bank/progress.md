@@ -465,3 +465,17 @@
 - [ ] Test weather canary deployment by updating Helm chart version
 - [ ] Add weather app to Locust tests
 - [ ] Add canary support for other applications (aspire, etc.)
+
+### 2025-12-24 (continued)
+
+2. **Added Canary Support for Podinfo**
+   - Created `apps/base/podinfo/canary.yaml` with Flagger configuration
+   - Configuration:
+     - Provider: Istio
+     - Target: podinfo Deployment
+     - Service port: 9898 (matches podinfo container port)
+     - Analysis: 1m interval, 5 threshold, 10% step weight up to 50%
+     - Metrics: success-rate (99% min), latency-p99 (500ms max)
+     - Load test webhook using Flagger loadtester
+   - Updated `apps/base/podinfo/kustomization.yaml` to include canary.yaml
+   - Flagger will create services: `podinfo`, `podinfo-primary`, `podinfo-canary`
