@@ -7,6 +7,9 @@
 1. **Configured Flagger for Azure Managed Prometheus (Staging)**
    - Issue: Flagger HelmRelease failed with "helmreleases.helm.toolkit.fluxcd.io 'prometheus' not found"
    - Root cause: Flagger had dependency on self-managed Prometheus HelmRelease which doesn't exist in staging (uses Azure Managed Prometheus)
+   - Additional issues encountered during deployment:
+     - HelmRepository "flagger" not found - needed to add flagger-helm.yaml to repository kustomization
+     - `secret "discord-webhook" not found` - needed to create the secret in flagger-system namespace
    - Solution: Created staging-specific Flagger configuration with Azure Managed Prometheus integration
    - Files created:
      - `infrastructure/staging/flagger/kustomization.yaml` - Patches base Flagger for staging
@@ -18,12 +21,14 @@
    - Files modified:
      - `infrastructure/staging/kustomization.yaml` - Added flagger to resources
      - `clusters/staging/flagger-config.yaml` - Updated path to staging metric templates
+     - `infrastructure/base/repository/kustomization.yaml` - Added flagger-helm.yaml
    - Configuration:
      - Azure Managed Prometheus endpoint: `https://amw-azr-staging-wus2-apa7cuf8ddhwhrfr.westus2.prometheus.monitor.azure.com`
      - ServiceAccount: `flagger-sa` with Azure Workload Identity
      - Requires Azure Managed Identity with "Monitoring Data Reader" role
+   - Status: **Flagger and flagger-loadtester pods running successfully**
    - Azure Setup Required (manual):
-     - Create Managed Identity: `flagger-azr-staging-wus2`
+     - Create Managed Identity for Flagger
      - Assign "Monitoring Data Reader" role on Azure Monitor Workspace
      - Create Federated Credential for `flagger-system:flagger-sa`
      - Update `<FLAGGER_MANAGED_IDENTITY_CLIENT_ID>` placeholder in serviceaccount.yaml
