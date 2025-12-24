@@ -19,7 +19,7 @@ spec:
       service.beta.kubernetes.io/port_80_health-probe_request-path: "/healthz/ready"
   listeners:
     - name: http
-      hostname: "azr.westus2.cloudapp.azure.com"
+      hostname: "*.westus2.cloudapp.azure.com"
       port: 80
       protocol: HTTP
       allowedRoutes:
