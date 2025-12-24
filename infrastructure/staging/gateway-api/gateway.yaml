@@ -6,8 +6,8 @@ metadata:
 spec:
   gatewayClassName: istio
   # Infrastructure configuration for the auto-provisioned gateway service
-  infrastructure:
-    annotations:
+  #infrastructure:
+  #  annotations:
       # AKS-specific annotations for static IP and resource group
       #service.beta.kubernetes.io/azure-load-balancer-resource-group: "rg-azr-staging-wus2"
       #service.beta.kubernetes.io/azure-load-balancer-ipv4: "4.155.238.139"
