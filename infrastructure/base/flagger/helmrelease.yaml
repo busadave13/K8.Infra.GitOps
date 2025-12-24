@@ -48,6 +48,8 @@ spec:
     # Use podAnnotations instead for Azure Managed Prometheus scraping
     podMonitor:
       enabled: true
+    additionalLabels:
+      release: azure-monitor
     # Enable Prometheus scraping via annotations for Azure Managed Prometheus
     # podAnnotations:
     #   prometheus.io/scrape: "true"
