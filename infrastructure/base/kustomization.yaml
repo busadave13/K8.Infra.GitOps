@@ -6,3 +6,4 @@ resources:
   - crds
   - istio-base
   - istiod
+  - flagger
