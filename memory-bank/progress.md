@@ -470,15 +470,16 @@
 
 2. **Fixed Flagger PodMonitor CRD Error**
    - Issue: Helm upgrade failed with "no matches for kind 'PodMonitor' in version 'monitoring.coreos.com/v1'"
-   - Root cause: PodMonitor CRD requires Prometheus Operator, which isn't installed (using Azure Managed Prometheus instead)
-   - Solution:
-     - Disabled `podMonitor.enabled` to prevent PodMonitor resource creation
-     - Added `podAnnotations` for Azure Managed Prometheus scraping:
+   - Root cause: Staging patch at `infrastructure/staging/flagger/helmrelease-patch.yaml` had `podMonitor.enabled: true`, which requires Prometheus Operator CRDs (using Azure Managed Prometheus instead)
+   - Solution: Removed/commented out the staging Flagger patch and now using base configuration directly
+   - Base configuration already correct:
+     - `podMonitor.enabled: false` - prevents PodMonitor resource creation
+     - `podAnnotations` for Azure Managed Prometheus scraping:
        - `prometheus.io/scrape: "true"`
        - `prometheus.io/port: "8080"`
        - `prometheus.io/path: "/metrics"`
-   - File modified: `infrastructure/base/flagger/helmrelease.yaml`
-   - Result: Flagger pods will be scraped by Azure Managed Prometheus via annotations
+   - File modified: `infrastructure/staging/kustomization.yaml` - commented out flagger helmrelease-patch.yaml
+   - Result: Flagger HelmRelease now deploys successfully using base configuration
 
 3. **Added Canary Support for Podinfo**
    - Created `apps/base/podinfo/canary.yaml` with Flagger configuration
