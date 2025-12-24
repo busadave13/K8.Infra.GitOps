@@ -10,8 +10,6 @@ spec:
   dependsOn:
     - name: istiod
       namespace: flux-system
-    - name: prometheus
-      namespace: monitor
   chart:
     spec:
       chart: flagger
@@ -29,7 +27,7 @@ spec:
       retries: 3
   values:
     meshProvider: istio
-    metricsServer: http://prometheus-server.monitor.svc.cluster.local
+    metricsServer: https://amw-azr-staging-wus2-apa7cuf8ddhwhrfr.westus2.prometheus.monitor.azure.com
     slack:
       user: flagger
       channel: k8-local-dev
@@ -39,5 +37,15 @@ spec:
           secretKeyRef:
             name: discord-webhook
             key: address
+      # Configure ServiceAccount for Workload Identity
+    serviceAccount:
+      create: false
+      name: flagger-sa
+    # Disable built-in prometheus since we're using Azure Managed Prometheus
     prometheus:
+      enabled: false
+    podMonitor:
       enabled: true
+      namespace: flagger
+      additionalLabels:
+        release: azure-monitor

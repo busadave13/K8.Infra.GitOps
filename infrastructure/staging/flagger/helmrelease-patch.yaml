@@ -18,3 +18,8 @@ spec:
     # Disable built-in prometheus since we're using Azure Managed Prometheus
     prometheus:
       enabled: false
+    podMonitor:
+      enabled: true
+      namespace: flagger
+      additionalLabels:
+        release: azure-monitor

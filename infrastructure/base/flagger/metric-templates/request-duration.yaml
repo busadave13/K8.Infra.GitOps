@@ -6,7 +6,7 @@ metadata:
 spec:
   provider:
     type: prometheus
-    address: http://prometheus-server.monitor.svc.cluster.local
+    address: https://amw-azr-staging-wus2-apa7cuf8ddhwhrfr.westus2.prometheus.monitor.azure.com
   query: |
     histogram_quantile(
       0.99,
