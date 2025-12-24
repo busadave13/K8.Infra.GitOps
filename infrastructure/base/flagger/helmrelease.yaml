@@ -4,7 +4,7 @@ metadata:
   name: flagger
   namespace: flux-system
 spec:
-  interval: 30m
+  interval: 2m
   releaseName: flagger
   targetNamespace: flagger-system
   dependsOn:
