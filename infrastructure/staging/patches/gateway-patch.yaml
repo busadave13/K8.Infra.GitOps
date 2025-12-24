@@ -1,0 +1,27 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: gateway-api
+  namespace: istio-ingress
+spec:
+  gatewayClassName: istio
+  # Infrastructure configuration for the auto-provisioned gateway service
+  infrastructure:
+    annotations:
+      # AKS-specific annotations for static IP and resource group
+      service.beta.kubernetes.io/azure-load-balancer-resource-group: "rg-azr-staging-wus2"
+      service.beta.kubernetes.io/azure-load-balancer-ipv4: "20.3.162.165"
+      # Health probe configuration for Azure Load Balancer
+      # The Istio gateway status port (15021) provides /healthz/ready endpoint
+      service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path: "/healthz/ready"
+      service.beta.kubernetes.io/port_80_health-probe_port: "15021"
+      service.beta.kubernetes.io/port_80_health-probe_protocol: "http"
+      service.beta.kubernetes.io/port_80_health-probe_request-path: "/healthz/ready"
+  listeners:
+    - name: http
+      hostname: "*.westus2.cloudapp.azure.com"
+      port: 80
+      protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: All
