@@ -47,9 +47,9 @@ spec:
     # Disable PodMonitor (requires Prometheus Operator CRDs which aren't installed)
     # Use podAnnotations instead for Azure Managed Prometheus scraping
     podMonitor:
-      enabled: false
+      enabled: true
     # Enable Prometheus scraping via annotations for Azure Managed Prometheus
-    podAnnotations:
-      prometheus.io/scrape: "true"
-      prometheus.io/port: "8080"
-      prometheus.io/path: "/metrics"
+    # podAnnotations:
+    #   prometheus.io/scrape: "true"
+    #   prometheus.io/port: "8080"
+    #   prometheus.io/path: "/metrics"

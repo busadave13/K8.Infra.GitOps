@@ -468,7 +468,25 @@
 
 ### 2025-12-24 (continued)
 
-2. **Fixed Flagger PodMonitor CRD Error**
+2. **Added Prometheus Operator CRDs for PodMonitor/ServiceMonitor Support**
+   - Issue: Helm upgrade failed with "no matches for kind 'PodMonitor' in version 'monitoring.coreos.com/v1'"
+   - Root cause: Flagger Helm chart validates against PodMonitor CRD even when `podMonitor.enabled: false`
+   - Solution: Added Prometheus Operator CRDs to the cluster
+   - Files created:
+     - `infrastructure/base/crds/podmonitors.yaml` - PodMonitor CRD (v0.80.1)
+     - `infrastructure/base/crds/servicemonitors.yaml` - ServiceMonitor CRD (v0.80.1)
+   - File modified: `infrastructure/base/crds/kustomization.yaml` - Added both CRDs
+   - Configuration decision: Keep `podMonitor.enabled: false` (Option 1)
+     - Using annotation-based scraping for Azure Managed Prometheus
+     - CRDs available for other components that may need them
+   - Base Flagger configuration:
+     - `podMonitor.enabled: false` - prevents PodMonitor resource creation
+     - `podAnnotations` for Azure Managed Prometheus scraping:
+       - `prometheus.io/scrape: "true"`
+       - `prometheus.io/port: "8080"`
+       - `prometheus.io/path: "/metrics"`
+
+3. **Fixed Flagger PodMonitor CRD Error**
    - Issue: Helm upgrade failed with "no matches for kind 'PodMonitor' in version 'monitoring.coreos.com/v1'"
    - Root cause: Staging patch at `infrastructure/staging/flagger/helmrelease-patch.yaml` had `podMonitor.enabled: true`, which requires Prometheus Operator CRDs (using Azure Managed Prometheus instead)
    - Solution: Removed/commented out the staging Flagger patch and now using base configuration directly
