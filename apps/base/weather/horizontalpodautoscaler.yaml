@@ -12,12 +12,12 @@ spec:
   maxReplicas: 4
   metrics:
     # Scale based on CPU utilization
-    - type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: 70
+    # - type: Resource
+    #   resource:
+    #     name: cpu
+    #     target:
+    #       type: Utilization
+    #       averageUtilization: 70
     # Scale based on RPS from Prometheus (via prometheus-adapter)
     - type: External
       external:
