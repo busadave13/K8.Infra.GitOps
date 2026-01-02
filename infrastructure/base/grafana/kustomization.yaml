@@ -16,3 +16,4 @@ resources:
   - kubernetes-app-metrics-dashboard-configmap.yaml
   - prometheus-alertmanager-dashboard-configmap.yaml
   - vpa-dashboard-configmap.yaml
+  - kubernetes-k8s-dashboard-configmap.yaml
