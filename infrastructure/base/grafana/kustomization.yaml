@@ -17,3 +17,4 @@ resources:
   - prometheus-alertmanager-dashboard-configmap.yaml
   - vpa-dashboard-configmap.yaml
   - kubernetes-k8s-dashboard-configmap.yaml
+  - service-throttling-dashboard-configmap.yaml
