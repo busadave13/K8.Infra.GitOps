@@ -101,7 +101,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "sum(increase(istio_requests_total{reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\", response_code=\"429\"}[$__range])) or vector(0)",
+              "expr": "sum(increase(istio_requests_total{job=\"kubernetes-pods\", reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\", response_code=\"429\"}[$__range])) or vector(0)",
               "legendFormat": "Throttled",
               "refId": "A"
             }
@@ -159,7 +159,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "sum(rate(istio_requests_total{reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\"}[5m]))",
+              "expr": "sum(rate(istio_requests_total{job=\"kubernetes-pods\", reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\"}[5m]))",
               "legendFormat": "Request Rate",
               "refId": "A"
             }
@@ -217,7 +217,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "sum(increase(istio_requests_total{reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\", response_code!~\"429|5.*\"}[$__range])) or vector(0)",
+              "expr": "sum(increase(istio_requests_total{job=\"kubernetes-pods\", reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\", response_code!~\"429|5.*\"}[$__range])) or vector(0)",
               "legendFormat": "Allowed",
               "refId": "A"
             }
@@ -283,7 +283,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "histogram_quantile(0.99, sum(rate(istio_request_duration_milliseconds_bucket{reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\"}[5m])) by (le))",
+              "expr": "histogram_quantile(0.99, sum(rate(istio_request_duration_milliseconds_bucket{job=\"kubernetes-pods\", reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\"}[5m])) by (le))",
               "legendFormat": "P99 Latency",
               "refId": "A"
             }
@@ -430,7 +430,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "sum(rate(istio_requests_total{reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\", response_code!~\"429|5.*\"}[1m]))",
+              "expr": "sum(rate(istio_requests_total{job=\"kubernetes-pods\", reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\", response_code!~\"429|5.*\"}[1m]))",
               "legendFormat": "Allowed",
               "refId": "A"
             },
@@ -439,7 +439,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "sum(rate(istio_requests_total{reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\", response_code=\"429\"}[1m]))",
+              "expr": "sum(rate(istio_requests_total{job=\"kubernetes-pods\", reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\", response_code=\"429\"}[1m]))",
               "legendFormat": "Throttled (429)",
               "refId": "B"
             },
@@ -448,7 +448,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "sum(rate(istio_requests_total{reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\", response_code=~\"5.*\"}[1m]))",
+              "expr": "sum(rate(istio_requests_total{job=\"kubernetes-pods\", reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\", response_code=~\"5.*\"}[1m]))",
               "legendFormat": "Server Errors (5xx)",
               "refId": "C"
             }
@@ -582,7 +582,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "histogram_quantile(0.50, sum(rate(istio_request_duration_milliseconds_bucket{reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\"}[5m])) by (le))",
+              "expr": "histogram_quantile(0.50, sum(rate(istio_request_duration_milliseconds_bucket{job=\"kubernetes-pods\", reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\"}[5m])) by (le))",
               "legendFormat": "P50",
               "refId": "A"
             },
@@ -591,7 +591,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "histogram_quantile(0.90, sum(rate(istio_request_duration_milliseconds_bucket{reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\"}[5m])) by (le))",
+              "expr": "histogram_quantile(0.90, sum(rate(istio_request_duration_milliseconds_bucket{job=\"kubernetes-pods\", reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\"}[5m])) by (le))",
               "legendFormat": "P90",
               "refId": "B"
             },
@@ -600,7 +600,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "histogram_quantile(0.99, sum(rate(istio_request_duration_milliseconds_bucket{reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\"}[5m])) by (le))",
+              "expr": "histogram_quantile(0.99, sum(rate(istio_request_duration_milliseconds_bucket{job=\"kubernetes-pods\", reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\"}[5m])) by (le))",
               "legendFormat": "P99",
               "refId": "C"
             }
@@ -679,7 +679,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "100 * sum(rate(istio_requests_total{reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\", response_code=\"429\"}[5m])) / sum(rate(istio_requests_total{reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\"}[5m]))",
+              "expr": "100 * sum(rate(istio_requests_total{job=\"kubernetes-pods\", reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\", response_code=\"429\"}[5m])) / sum(rate(istio_requests_total{job=\"kubernetes-pods\", reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\"}[5m]))",
               "legendFormat": "Throttle Rate",
               "refId": "A"
             }
@@ -785,7 +785,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "sum(increase(istio_requests_total{reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\", response_code!~\"429|5.*\"}[$__range]))",
+              "expr": "sum(increase(istio_requests_total{job=\"kubernetes-pods\", reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\", response_code!~\"429|5.*\"}[$__range]))",
               "legendFormat": "Allowed",
               "refId": "A"
             },
@@ -794,7 +794,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "sum(increase(istio_requests_total{reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\", response_code=\"429\"}[$__range]))",
+              "expr": "sum(increase(istio_requests_total{job=\"kubernetes-pods\", reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\", response_code=\"429\"}[$__range]))",
               "legendFormat": "Throttled (429)",
               "refId": "B"
             },
@@ -803,7 +803,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "sum(increase(istio_requests_total{reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\", response_code=~\"5.*\"}[$__range]))",
+              "expr": "sum(increase(istio_requests_total{job=\"kubernetes-pods\", reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\", response_code=~\"5.*\"}[$__range]))",
               "legendFormat": "Server Errors (5xx)",
               "refId": "C"
             }
@@ -869,7 +869,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "100 * sum(rate(istio_requests_total{reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\", response_code!~\"5.*\"}[5m])) / sum(rate(istio_requests_total{reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\"}[5m]))",
+              "expr": "100 * sum(rate(istio_requests_total{job=\"kubernetes-pods\", reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\", response_code!~\"5.*\"}[5m])) / sum(rate(istio_requests_total{job=\"kubernetes-pods\", reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\"}[5m]))",
               "legendFormat": "Success Rate",
               "refId": "A"
             }
@@ -988,7 +988,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "sum(increase(istio_requests_total{reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\", response_code!~\"429|5.*\"}[1m]))",
+              "expr": "sum(increase(istio_requests_total{job=\"kubernetes-pods\", reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\", response_code!~\"429|5.*\"}[1m]))",
               "legendFormat": "Allowed",
               "refId": "A"
             },
@@ -997,7 +997,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "sum(increase(istio_requests_total{reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\", response_code=\"429\"}[1m]))",
+              "expr": "sum(increase(istio_requests_total{job=\"kubernetes-pods\", reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\", response_code=\"429\"}[1m]))",
               "legendFormat": "Throttled (429)",
               "refId": "B"
             }
@@ -1098,7 +1098,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "sum(rate(istio_requests_total{reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\", response_code=\"429\"}[5m])) by (source_workload, source_workload_namespace)",
+              "expr": "sum(rate(istio_requests_total{job=\"kubernetes-pods\", reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\", response_code=\"429\"}[5m])) by (source_workload, source_workload_namespace)",
               "legendFormat": "{{source_workload_namespace}}/{{source_workload}}",
               "refId": "A"
             }
@@ -1186,7 +1186,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "sum(rate(istio_requests_total{reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\"}[5m])) by (source_workload, source_workload_namespace)",
+              "expr": "sum(rate(istio_requests_total{job=\"kubernetes-pods\", reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\"}[5m])) by (source_workload, source_workload_namespace)",
               "legendFormat": "{{source_workload_namespace}}/{{source_workload}}",
               "refId": "A"
             }
@@ -1348,7 +1348,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "sum(rate(istio_requests_total{reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\"}[5m])) by (response_code)",
+              "expr": "sum(rate(istio_requests_total{job=\"kubernetes-pods\", reporter=\"destination\", destination_service_namespace=~\"$namespace\", destination_service=~\"$service\"}[5m])) by (response_code)",
               "legendFormat": "{{response_code}}",
               "refId": "A"
             }
@@ -1373,7 +1373,7 @@ data:
               "type": "prometheus",
               "uid": "prometheus"
             },
-            "definition": "label_values(istio_requests_total{reporter=\"destination\"}, destination_service_namespace)",
+            "definition": "label_values(istio_requests_total{job=\"kubernetes-pods\", reporter=\"destination\"}, destination_service_namespace)",
             "hide": 0,
             "includeAll": true,
             "label": "Namespace",
@@ -1381,7 +1381,7 @@ data:
             "name": "namespace",
             "options": [],
             "query": {
-              "query": "label_values(istio_requests_total{reporter=\"destination\"}, destination_service_namespace)",
+              "query": "label_values(istio_requests_total{job=\"kubernetes-pods\", reporter=\"destination\"}, destination_service_namespace)",
               "refId": "StandardVariableQuery"
             },
             "refresh": 2,
@@ -1400,7 +1400,7 @@ data:
               "type": "prometheus",
               "uid": "prometheus"
             },
-            "definition": "label_values(istio_requests_total{reporter=\"destination\", destination_service_namespace=~\"$namespace\"}, destination_service)",
+            "definition": "label_values(istio_requests_total{job=\"kubernetes-pods\", reporter=\"destination\", destination_service_namespace=~\"$namespace\"}, destination_service)",
             "hide": 0,
             "includeAll": true,
             "label": "Service",
@@ -1408,7 +1408,7 @@ data:
             "name": "service",
             "options": [],
             "query": {
-              "query": "label_values(istio_requests_total{reporter=\"destination\", destination_service_namespace=~\"$namespace\"}, destination_service)",
+              "query": "label_values(istio_requests_total{job=\"kubernetes-pods\", reporter=\"destination\", destination_service_namespace=~\"$namespace\"}, destination_service)",
               "refId": "StandardVariableQuery"
             },
             "refresh": 2,
