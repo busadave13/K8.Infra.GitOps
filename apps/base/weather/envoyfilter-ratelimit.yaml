@@ -6,7 +6,7 @@ metadata:
 spec:
   workloadSelector:
     labels:
-      app: weather
+      app: weather-primary
   configPatches:
     # Add local rate limit filter to HTTP filter chain
     - applyTo: HTTP_FILTER
