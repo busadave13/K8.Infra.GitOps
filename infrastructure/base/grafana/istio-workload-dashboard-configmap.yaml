@@ -356,6 +356,154 @@ data:
           ],
           "title": "CPU Throttling",
           "type": "timeseries"
+        },
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 45 },
+          "id": 19,
+          "panels": [],
+          "title": "Rate Limiting & Throttling",
+          "type": "row"
+        },
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "mappings": [],
+              "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 100 }] },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 5, "w": 6, "x": 0, "y": 46 },
+          "id": 20,
+          "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+          "pluginVersion": "10.0.0",
+          "targets": [{ "datasource": "Prometheus", "expr": "sum(increase(istio_requests_total{job=\"kubernetes-pods\", reporter=\"destination\", destination_workload_namespace=~\"$namespace\", destination_workload=~\"$workload\", response_code=\"429\"}[$__range])) or vector(0)", "legendFormat": "Throttled", "refId": "A" }],
+          "title": "Throttled Requests (429s)",
+          "type": "stat"
+        },
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "mappings": [],
+              "max": 100,
+              "min": 0,
+              "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 10 }, { "color": "red", "value": 25 }] },
+              "unit": "percent"
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 5, "w": 6, "x": 6, "y": 46 },
+          "id": 21,
+          "options": { "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showThresholdLabels": false, "showThresholdMarkers": true },
+          "pluginVersion": "10.0.0",
+          "targets": [{ "datasource": "Prometheus", "expr": "100 * sum(rate(istio_requests_total{job=\"kubernetes-pods\", reporter=\"destination\", destination_workload_namespace=~\"$namespace\", destination_workload=~\"$workload\", response_code=\"429\"}[5m])) / sum(rate(istio_requests_total{job=\"kubernetes-pods\", reporter=\"destination\", destination_workload_namespace=~\"$namespace\", destination_workload=~\"$workload\"}[5m])) or vector(0)", "legendFormat": "Throttle Rate", "refId": "A" }],
+          "title": "Throttle Rate %",
+          "type": "gauge"
+        },
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": { "hideFrom": { "legend": false, "tooltip": false, "viz": false } },
+              "mappings": []
+            },
+            "overrides": [
+              { "matcher": { "id": "byName", "options": "Allowed" }, "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }] },
+              { "matcher": { "id": "byName", "options": "Throttled (429)" }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }] },
+              { "matcher": { "id": "byName", "options": "Server Errors (5xx)" }, "properties": [{ "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }] }
+            ]
+          },
+          "gridPos": { "h": 5, "w": 6, "x": 12, "y": 46 },
+          "id": 22,
+          "options": { "legend": { "displayMode": "list", "placement": "right", "showLegend": true }, "pieType": "donut", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "tooltip": { "mode": "single", "sort": "none" } },
+          "pluginVersion": "10.0.0",
+          "targets": [
+            { "datasource": "Prometheus", "expr": "sum(increase(istio_requests_total{job=\"kubernetes-pods\", reporter=\"destination\", destination_workload_namespace=~\"$namespace\", destination_workload=~\"$workload\", response_code!~\"429|5.*\"}[$__range])) or vector(0)", "legendFormat": "Allowed", "refId": "A" },
+            { "datasource": "Prometheus", "expr": "sum(increase(istio_requests_total{job=\"kubernetes-pods\", reporter=\"destination\", destination_workload_namespace=~\"$namespace\", destination_workload=~\"$workload\", response_code=\"429\"}[$__range])) or vector(0)", "legendFormat": "Throttled (429)", "refId": "B" },
+            { "datasource": "Prometheus", "expr": "sum(increase(istio_requests_total{job=\"kubernetes-pods\", reporter=\"destination\", destination_workload_namespace=~\"$namespace\", destination_workload=~\"$workload\", response_code=~\"5.*\"}[$__range])) or vector(0)", "legendFormat": "Server Errors (5xx)", "refId": "C" }
+          ],
+          "title": "Request Distribution",
+          "type": "piechart"
+        },
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "mappings": [],
+              "max": 100,
+              "min": 0,
+              "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "yellow", "value": 95 }, { "color": "green", "value": 99 }] },
+              "unit": "percent"
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 5, "w": 6, "x": 18, "y": 46 },
+          "id": 23,
+          "options": { "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showThresholdLabels": false, "showThresholdMarkers": true },
+          "pluginVersion": "10.0.0",
+          "targets": [{ "datasource": "Prometheus", "expr": "100 * sum(rate(istio_requests_total{job=\"kubernetes-pods\", reporter=\"destination\", destination_workload_namespace=~\"$namespace\", destination_workload=~\"$workload\", response_code!~\"5.*\"}[5m])) / sum(rate(istio_requests_total{job=\"kubernetes-pods\", reporter=\"destination\", destination_workload_namespace=~\"$namespace\", destination_workload=~\"$workload\"}[5m])) or vector(100)", "legendFormat": "Success Rate", "refId": "A" }],
+          "title": "Success Rate %",
+          "type": "gauge"
+        },
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": { "axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line", "fillOpacity": 20, "gradientMode": "none", "hideFrom": { "legend": false, "tooltip": false, "viz": false }, "lineInterpolation": "smooth", "lineWidth": 2, "pointSize": 5, "scaleDistribution": { "type": "linear" }, "showPoints": "never", "spanNulls": false, "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" } },
+              "mappings": [],
+              "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+              "unit": "reqps"
+            },
+            "overrides": [
+              { "matcher": { "id": "byName", "options": "Allowed" }, "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }] },
+              { "matcher": { "id": "byName", "options": "Throttled (429)" }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }] },
+              { "matcher": { "id": "byName", "options": "Server Errors (5xx)" }, "properties": [{ "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }] }
+            ]
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 51 },
+          "id": 24,
+          "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "none" } },
+          "pluginVersion": "10.0.0",
+          "targets": [
+            { "datasource": "Prometheus", "expr": "sum(rate(istio_requests_total{job=\"kubernetes-pods\", reporter=\"destination\", destination_workload_namespace=~\"$namespace\", destination_workload=~\"$workload\", response_code!~\"429|5.*\"}[1m]))", "legendFormat": "Allowed", "refId": "A" },
+            { "datasource": "Prometheus", "expr": "sum(rate(istio_requests_total{job=\"kubernetes-pods\", reporter=\"destination\", destination_workload_namespace=~\"$namespace\", destination_workload=~\"$workload\", response_code=\"429\"}[1m]))", "legendFormat": "Throttled (429)", "refId": "B" },
+            { "datasource": "Prometheus", "expr": "sum(rate(istio_requests_total{job=\"kubernetes-pods\", reporter=\"destination\", destination_workload_namespace=~\"$namespace\", destination_workload=~\"$workload\", response_code=~\"5.*\"}[1m]))", "legendFormat": "Server Errors (5xx)", "refId": "C" }
+          ],
+          "title": "Request Rate by Status",
+          "type": "timeseries"
+        },
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": { "axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line", "fillOpacity": 10, "gradientMode": "none", "hideFrom": { "legend": false, "tooltip": false, "viz": false }, "lineInterpolation": "smooth", "lineWidth": 2, "pointSize": 5, "scaleDistribution": { "type": "linear" }, "showPoints": "never", "spanNulls": false, "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" } },
+              "mappings": [],
+              "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+              "unit": "reqps"
+            },
+            "overrides": [
+              { "matcher": { "id": "byRegexp", "options": "/2.*/" }, "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }] },
+              { "matcher": { "id": "byRegexp", "options": "/4.*/" }, "properties": [{ "id": "color", "value": { "fixedColor": "yellow", "mode": "fixed" } }] },
+              { "matcher": { "id": "byName", "options": "429" }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }] },
+              { "matcher": { "id": "byRegexp", "options": "/5.*/" }, "properties": [{ "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }] }
+            ]
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 51 },
+          "id": 25,
+          "options": { "legend": { "calcs": ["mean", "max", "sum"], "displayMode": "table", "placement": "right", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+          "pluginVersion": "10.0.0",
+          "targets": [{ "datasource": "Prometheus", "expr": "sum(rate(istio_requests_total{job=\"kubernetes-pods\", reporter=\"destination\", destination_workload_namespace=~\"$namespace\", destination_workload=~\"$workload\"}[5m])) by (response_code)", "legendFormat": "{{response_code}}", "refId": "A" }],
+          "title": "Requests by Response Code",
+          "type": "timeseries"
         }
       ],
       "refresh": "30s",
