@@ -221,7 +221,7 @@ data:
           "id": 12,
           "options": { "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showThresholdLabels": false, "showThresholdMarkers": true },
           "pluginVersion": "10.0.0",
-          "targets": [{ "datasource": "Prometheus", "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=~\"$namespace\", pod=~\"$workload.*\", container!=\"\", container!=\"POD\"}[5m])) / sum(kube_pod_container_resource_limits{namespace=~\"$namespace\", pod=~\"$workload.*\", resource=\"cpu\", container!=\"\"}) * 100", "legendFormat": "CPU % of Limit", "refId": "A" }],
+          "targets": [{ "datasource": "Prometheus", "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=~\"$namespace\", pod=~\"$workload.*\", container!=\"\", container!=\"POD\", container!=\"istio-proxy\"}[5m])) / sum(kube_pod_container_resource_limits{namespace=~\"$namespace\", pod=~\"$workload.*\", resource=\"cpu\", container!=\"\", container!=\"istio-proxy\"}) * 100", "legendFormat": "CPU % of Limit", "refId": "A" }],
           "title": "CPU Utilization (% of Limit)",
           "type": "gauge"
         },
@@ -240,7 +240,7 @@ data:
           "id": 13,
           "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
           "pluginVersion": "10.0.0",
-          "targets": [{ "datasource": "Prometheus", "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=~\"$namespace\", pod=~\"$workload.*\", container!=\"\", container!=\"POD\"}[5m])) / sum(kube_pod_container_resource_requests{namespace=~\"$namespace\", pod=~\"$workload.*\", resource=\"cpu\", container!=\"\"}) * 100", "legendFormat": "CPU % of Request", "refId": "A" }],
+          "targets": [{ "datasource": "Prometheus", "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=~\"$namespace\", pod=~\"$workload.*\", container!=\"\", container!=\"POD\", container!=\"istio-proxy\"}[5m])) / sum(kube_pod_container_resource_requests{namespace=~\"$namespace\", pod=~\"$workload.*\", resource=\"cpu\", container!=\"\", container!=\"istio-proxy\"}) * 100", "legendFormat": "CPU % of Request", "refId": "A" }],
           "title": "CPU Usage (% of Request)",
           "type": "stat"
         },
@@ -279,7 +279,7 @@ data:
           "id": 14,
           "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
           "pluginVersion": "10.0.0",
-          "targets": [{ "datasource": "Prometheus", "expr": "sum(kube_pod_container_resource_requests{namespace=~\"$namespace\", pod=~\"$workload.*\", resource=\"cpu\", container!=\"\"})", "legendFormat": "CPU Requests", "refId": "A" }],
+          "targets": [{ "datasource": "Prometheus", "expr": "sum(kube_pod_container_resource_requests{namespace=~\"$namespace\", pod=~\"$workload.*\", resource=\"cpu\", container!=\"\", container!=\"istio-proxy\"})", "legendFormat": "CPU Requests", "refId": "A" }],
           "title": "CPU Requests (cores)",
           "type": "stat"
         },
@@ -298,7 +298,7 @@ data:
           "id": 15,
           "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
           "pluginVersion": "10.0.0",
-          "targets": [{ "datasource": "Prometheus", "expr": "sum(kube_pod_container_resource_limits{namespace=~\"$namespace\", pod=~\"$workload.*\", resource=\"cpu\", container!=\"\"})", "legendFormat": "CPU Limits", "refId": "A" }],
+          "targets": [{ "datasource": "Prometheus", "expr": "sum(kube_pod_container_resource_limits{namespace=~\"$namespace\", pod=~\"$workload.*\", resource=\"cpu\", container!=\"\", container!=\"istio-proxy\"})", "legendFormat": "CPU Limits", "refId": "A" }],
           "title": "CPU Limits (cores)",
           "type": "stat"
         },
@@ -324,10 +324,10 @@ data:
           "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
           "pluginVersion": "10.0.0",
           "targets": [
-            { "datasource": "Prometheus", "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=~\"$namespace\", pod=~\"$workload.*\", container!=\"\", container!=\"POD\"}[5m]))", "legendFormat": "CPU Usage", "refId": "A" },
-            { "datasource": "Prometheus", "expr": "sum(kube_pod_container_resource_requests{namespace=~\"$namespace\", pod=~\"$workload.*\", resource=\"cpu\", container!=\"\"})", "legendFormat": "CPU Requests", "refId": "B" },
-            { "datasource": "Prometheus", "expr": "sum(kube_pod_container_resource_limits{namespace=~\"$namespace\", pod=~\"$workload.*\", resource=\"cpu\", container!=\"\"})", "legendFormat": "CPU Limits", "refId": "C" },
-            { "datasource": "Prometheus", "expr": "sum(kube_pod_container_resource_requests{namespace=~\"$namespace\", pod=~\"$workload.*\", resource=\"cpu\", container!=\"\"}) * (max(kube_horizontalpodautoscaler_spec_target_metric{namespace=~\"$namespace\", horizontalpodautoscaler=~\"$workload.*\", metric_name=\"cpu\"}) / 100 or vector(0.8))", "legendFormat": "HPA Target", "refId": "D" }
+            { "datasource": "Prometheus", "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=~\"$namespace\", pod=~\"$workload.*\", container!=\"\", container!=\"POD\", container!=\"istio-proxy\"}[5m]))", "legendFormat": "CPU Usage", "refId": "A" },
+            { "datasource": "Prometheus", "expr": "sum(kube_pod_container_resource_requests{namespace=~\"$namespace\", pod=~\"$workload.*\", resource=\"cpu\", container!=\"\", container!=\"istio-proxy\"})", "legendFormat": "CPU Requests", "refId": "B" },
+            { "datasource": "Prometheus", "expr": "sum(kube_pod_container_resource_limits{namespace=~\"$namespace\", pod=~\"$workload.*\", resource=\"cpu\", container!=\"\", container!=\"istio-proxy\"})", "legendFormat": "CPU Limits", "refId": "C" },
+            { "datasource": "Prometheus", "expr": "sum(kube_pod_container_resource_requests{namespace=~\"$namespace\", pod=~\"$workload.*\", resource=\"cpu\", container!=\"\", container!=\"istio-proxy\"}) * (max(kube_horizontalpodautoscaler_spec_target_metric{namespace=~\"$namespace\", horizontalpodautoscaler=~\"$workload.*\", metric_name=\"cpu\"}) / 100 or vector(0.8))", "legendFormat": "HPA Target", "refId": "D" }
           ],
           "title": "CPU Usage vs Requests vs Limits vs HPA Target",
           "type": "timeseries"
@@ -351,8 +351,8 @@ data:
           "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
           "pluginVersion": "10.0.0",
           "targets": [
-            { "datasource": "Prometheus", "expr": "sum(rate(container_cpu_cfs_throttled_periods_total{namespace=~\"$namespace\", pod=~\"$workload.*\", container!=\"\", container!=\"POD\"}[5m]))", "legendFormat": "Throttled Periods", "refId": "A" },
-            { "datasource": "Prometheus", "expr": "sum(rate(container_cpu_cfs_periods_total{namespace=~\"$namespace\", pod=~\"$workload.*\", container!=\"\", container!=\"POD\"}[5m]))", "legendFormat": "Total Periods", "refId": "B" }
+            { "datasource": "Prometheus", "expr": "sum(rate(container_cpu_cfs_throttled_periods_total{namespace=~\"$namespace\", pod=~\"$workload.*\", container!=\"\", container!=\"POD\", container!=\"istio-proxy\"}[5m]))", "legendFormat": "Throttled Periods", "refId": "A" },
+            { "datasource": "Prometheus", "expr": "sum(rate(container_cpu_cfs_periods_total{namespace=~\"$namespace\", pod=~\"$workload.*\", container!=\"\", container!=\"POD\", container!=\"istio-proxy\"}[5m]))", "legendFormat": "Total Periods", "refId": "B" }
           ],
           "title": "CPU Throttling",
           "type": "timeseries"
