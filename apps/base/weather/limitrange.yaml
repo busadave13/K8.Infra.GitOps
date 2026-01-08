@@ -5,21 +5,27 @@ metadata:
   namespace: weather
 spec:
   limits:
-    - type: Container
+    # - type: Container
+    #   default:
+    #     cpu: 200m
+    #     memory: 256Mi
+    #   defaultRequest:
+    #     cpu: 100m
+    #     memory: 128Mi
+    #   min:
+    #     cpu: 50m
+    #     memory: 64Mi
+    #   max:
+    #     cpu: "2"
+    #     memory: 1Gi
+    - type: Pod
       default:
-        cpu: 200m
+        #cpu: 200m
         memory: 256Mi
       defaultRequest:
-        cpu: 100m
+        cpu: 200m
         memory: 128Mi
-      min:
-        cpu: 50m
-        memory: 64Mi
       max:
-        cpu: "2"
+        cpu: "1"
         memory: 1Gi
-    # - type: Pod
-    #   max:
-    #     cpu: "4"
-    #     memory: 2Gi
  
