@@ -302,19 +302,8 @@ data:
         },
         {
           "datasource": "Prometheus",
-          "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "mappings": [], "min": 0, "thresholds": { "mode": "absolute", "steps": [{ "color": "yellow", "value": null }, { "color": "green", "value": 2 }, { "color": "orange", "value": 8 }, { "color": "red", "value": 10 }] }, "unit": "short" }, "overrides": [] },
-          "gridPos": { "h": 6, "w": 4, "x": 12, "y": 45 },
-          "id": 18,
-          "options": { "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showThresholdLabels": false, "showThresholdMarkers": true },
-          "pluginVersion": "10.0.0",
-          "targets": [{ "datasource": "Prometheus", "expr": "count(kube_pod_status_phase{namespace=~\"$namespace\", pod=~\"$workload.*\", phase=\"Running\"}) or vector(0)", "legendFormat": "Active Pods", "refId": "A" }],
-          "title": "Active Pods",
-          "type": "gauge"
-        },
-        {
-          "datasource": "Prometheus",
           "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "mappings": [], "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }, "unit": "short" }, "overrides": [] },
-          "gridPos": { "h": 6, "w": 4, "x": 16, "y": 45 },
+          "gridPos": { "h": 6, "w": 6, "x": 12, "y": 45 },
           "id": 14,
           "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
           "pluginVersion": "10.0.0",
@@ -325,7 +314,7 @@ data:
         {
           "datasource": "Prometheus",
           "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "mappings": [], "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }, "unit": "short" }, "overrides": [] },
-          "gridPos": { "h": 6, "w": 4, "x": 20, "y": 45 },
+          "gridPos": { "h": 6, "w": 6, "x": 18, "y": 45 },
           "id": 15,
           "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
           "pluginVersion": "10.0.0",
@@ -353,6 +342,80 @@ data:
           "pluginVersion": "10.0.0",
           "targets": [{ "datasource": "Prometheus", "expr": "sum(rate(container_cpu_cfs_throttled_periods_total{namespace=~\"$namespace\", pod=~\"$workload.*\", container!=\"\", container!=\"POD\", container!=\"istio-proxy\"}[5m]))", "legendFormat": "Throttled Periods", "refId": "A" }, { "datasource": "Prometheus", "expr": "sum(rate(container_cpu_cfs_periods_total{namespace=~\"$namespace\", pod=~\"$workload.*\", container!=\"\", container!=\"POD\", container!=\"istio-proxy\"}[5m]))", "legendFormat": "Total Periods", "refId": "B" }],
           "title": "CPU Throttling",
+          "type": "timeseries"
+        },
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 59 },
+          "id": 26,
+          "panels": [],
+          "title": "Pod Health & Availability",
+          "type": "row"
+        },
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "mappings": [], "min": 0, "thresholds": { "mode": "absolute", "steps": [{ "color": "yellow", "value": null }, { "color": "green", "value": 1 }, { "color": "orange", "value": 8 }, { "color": "red", "value": 10 }] }, "unit": "short" }, "overrides": [] },
+          "gridPos": { "h": 6, "w": 6, "x": 0, "y": 60 },
+          "id": 27,
+          "options": { "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showThresholdLabels": false, "showThresholdMarkers": true },
+          "pluginVersion": "10.0.0",
+          "targets": [{ "datasource": "Prometheus", "expr": "count(kube_pod_status_phase{namespace=~\"$namespace\", pod=~\"$workload.*\", phase=\"Running\"}) or vector(0)", "legendFormat": "Active Pods", "refId": "A" }],
+          "title": "Active Pods",
+          "type": "gauge"
+        },
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "mappings": [], "min": 0, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 5 }] }, "unit": "short" }, "overrides": [] },
+          "gridPos": { "h": 6, "w": 6, "x": 6, "y": 60 },
+          "id": 28,
+          "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+          "pluginVersion": "10.0.0",
+          "targets": [{ "datasource": "Prometheus", "expr": "sum(kube_pod_container_status_restarts_total{namespace=~\"$namespace\", pod=~\"$workload.*\"}) or vector(0)", "legendFormat": "Total Restarts", "refId": "A" }],
+          "title": "Pod Restarts (Total)",
+          "type": "stat"
+        },
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "mappings": [], "min": 0, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 2 }] }, "unit": "short" }, "overrides": [] },
+          "gridPos": { "h": 6, "w": 6, "x": 12, "y": 60 },
+          "id": 29,
+          "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+          "pluginVersion": "10.0.0",
+          "targets": [{ "datasource": "Prometheus", "expr": "count(kube_pod_status_ready{namespace=~\"$namespace\", pod=~\"$workload.*\", condition=\"false\"}) or vector(0)", "legendFormat": "Not Ready", "refId": "A" }],
+          "title": "Pods Not Ready (Removed from LB)",
+          "type": "stat"
+        },
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "mappings": [], "min": 0, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 3 }] }, "unit": "short" }, "overrides": [] },
+          "gridPos": { "h": 6, "w": 6, "x": 18, "y": 60 },
+          "id": 30,
+          "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+          "pluginVersion": "10.0.0",
+          "targets": [{ "datasource": "Prometheus", "expr": "sum(increase(kube_pod_container_status_restarts_total{namespace=~\"$namespace\", pod=~\"$workload.*\"}[1h])) or vector(0)", "legendFormat": "Restarts (1h)", "refId": "A" }],
+          "title": "Restarts (Last Hour)",
+          "type": "stat"
+        },
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "custom": { "axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "Restarts", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line", "fillOpacity": 30, "gradientMode": "none", "hideFrom": { "legend": false, "tooltip": false, "viz": false }, "lineInterpolation": "smooth", "lineWidth": 2, "pointSize": 5, "scaleDistribution": { "type": "linear" }, "showPoints": "never", "spanNulls": false, "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" } }, "mappings": [], "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] }, "unit": "short" }, "overrides": [{ "matcher": { "id": "byName", "options": "Restarts" }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }] }] },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 66 },
+          "id": 31,
+          "options": { "legend": { "calcs": ["sum", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+          "pluginVersion": "10.0.0",
+          "targets": [{ "datasource": "Prometheus", "expr": "sum(increase(kube_pod_container_status_restarts_total{namespace=~\"$namespace\", pod=~\"$workload.*\"}[5m]))", "legendFormat": "Restarts", "refId": "A" }],
+          "title": "Pod Restarts Over Time",
+          "type": "timeseries"
+        },
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "custom": { "axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "Pods", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line", "fillOpacity": 20, "gradientMode": "none", "hideFrom": { "legend": false, "tooltip": false, "viz": false }, "lineInterpolation": "smooth", "lineWidth": 2, "pointSize": 5, "scaleDistribution": { "type": "linear" }, "showPoints": "never", "spanNulls": false, "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" } }, "mappings": [], "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }, "unit": "short" }, "overrides": [{ "matcher": { "id": "byName", "options": "Running" }, "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }] }, { "matcher": { "id": "byName", "options": "Not Ready" }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }] }] },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 66 },
+          "id": 32,
+          "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+          "pluginVersion": "10.0.0",
+          "targets": [{ "datasource": "Prometheus", "expr": "count(kube_pod_status_phase{namespace=~\"$namespace\", pod=~\"$workload.*\", phase=\"Running\"}) or vector(0)", "legendFormat": "Running", "refId": "A" }, { "datasource": "Prometheus", "expr": "count(kube_pod_status_ready{namespace=~\"$namespace\", pod=~\"$workload.*\", condition=\"false\"}) or vector(0)", "legendFormat": "Not Ready", "refId": "B" }],
+          "title": "Pod Status Over Time",
           "type": "timeseries"
         }
       ],
