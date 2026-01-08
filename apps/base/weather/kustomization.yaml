@@ -8,3 +8,4 @@ resources:
   - canary.yaml
   - horizontalpodautoscaler.yaml
   - limitrange.yaml
+  - envoyfilter-ratelimit.yaml
