@@ -177,6 +177,331 @@ data:
         {
           "collapsed": false,
           "gridPos": { "h": 1, "w": 24, "x": 0, "y": 7 },
+          "id": 14,
+          "panels": [],
+          "title": "Gateway Pod Resources",
+          "type": "row"
+        },
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "mappings": [],
+              "max": 100,
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "yellow", "value": 50 },
+                  { "color": "red", "value": 80 }
+                ]
+              },
+              "unit": "percent"
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 6, "w": 6, "x": 0, "y": 8 },
+          "id": 15,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+            "textMode": "auto"
+          },
+          "pluginVersion": "10.0.0",
+          "targets": [
+            {
+              "datasource": "Prometheus",
+              "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"istio-ingress\", pod=~\"gateway-api-istio.*\", container!=\"\"}[5m])) / sum(kube_pod_container_resource_requests{namespace=\"istio-ingress\", pod=~\"gateway-api-istio.*\", resource=\"cpu\"}) * 100",
+              "legendFormat": "CPU Utilization",
+              "refId": "A"
+            }
+          ],
+          "title": "CPU Utilization %",
+          "description": "Current CPU usage as percentage of requests. HPA target is 50%.",
+          "type": "stat"
+        },
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "blue", "value": null }
+                ]
+              },
+              "unit": "short",
+              "decimals": 2
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 6, "w": 6, "x": 6, "y": 8 },
+          "id": 16,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+            "textMode": "auto"
+          },
+          "pluginVersion": "10.0.0",
+          "targets": [
+            {
+              "datasource": "Prometheus",
+              "expr": "sum(kube_pod_container_resource_requests{namespace=\"istio-ingress\", pod=~\"gateway-api-istio.*\", resource=\"cpu\"})",
+              "legendFormat": "CPU Requests",
+              "refId": "A"
+            }
+          ],
+          "title": "CPU Requests (cores)",
+          "description": "Total CPU requests across all gateway pods",
+          "type": "stat"
+        },
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "orange", "value": null }
+                ]
+              },
+              "unit": "short",
+              "decimals": 2
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 6, "w": 6, "x": 12, "y": 8 },
+          "id": 17,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+            "textMode": "auto"
+          },
+          "pluginVersion": "10.0.0",
+          "targets": [
+            {
+              "datasource": "Prometheus",
+              "expr": "sum(kube_pod_container_resource_limits{namespace=\"istio-ingress\", pod=~\"gateway-api-istio.*\", resource=\"cpu\"})",
+              "legendFormat": "CPU Limits",
+              "refId": "A"
+            }
+          ],
+          "title": "CPU Limits (cores)",
+          "description": "Total CPU limits across all gateway pods",
+          "type": "stat"
+        },
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 6, "w": 6, "x": 18, "y": 8 },
+          "id": 18,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+            "textMode": "auto"
+          },
+          "pluginVersion": "10.0.0",
+          "targets": [
+            {
+              "datasource": "Prometheus",
+              "expr": "count(kube_pod_info{namespace=\"istio-ingress\", pod=~\"gateway-api-istio.*\"})",
+              "legendFormat": "Pod Count",
+              "refId": "A"
+            }
+          ],
+          "title": "Gateway Pods",
+          "description": "Number of running gateway pods",
+          "type": "stat"
+        },
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "CPU (cores)",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": { "type": "linear" },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": { "group": "A", "mode": "none" },
+                "thresholdsStyle": { "mode": "off" }
+              },
+              "mappings": [],
+              "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+              "unit": "short"
+            },
+            "overrides": [
+              {
+                "matcher": { "id": "byName", "options": "Requests" },
+                "properties": [
+                  { "id": "color", "value": { "fixedColor": "blue", "mode": "fixed" } },
+                  { "id": "custom.lineStyle", "value": { "dash": [10, 10], "fill": "dash" } }
+                ]
+              },
+              {
+                "matcher": { "id": "byName", "options": "Limits" },
+                "properties": [
+                  { "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } },
+                  { "id": "custom.lineStyle", "value": { "dash": [10, 10], "fill": "dash" } }
+                ]
+              },
+              {
+                "matcher": { "id": "byName", "options": "Usage" },
+                "properties": [
+                  { "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }
+                ]
+              }
+            ]
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
+          "id": 19,
+          "options": {
+            "legend": { "calcs": ["mean", "max", "lastNotNull"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+            "tooltip": { "mode": "multi", "sort": "desc" }
+          },
+          "pluginVersion": "10.0.0",
+          "targets": [
+            {
+              "datasource": "Prometheus",
+              "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"istio-ingress\", pod=~\"gateway-api-istio.*\", container!=\"\"}[5m]))",
+              "legendFormat": "Usage",
+              "refId": "A"
+            },
+            {
+              "datasource": "Prometheus",
+              "expr": "sum(kube_pod_container_resource_requests{namespace=\"istio-ingress\", pod=~\"gateway-api-istio.*\", resource=\"cpu\"})",
+              "legendFormat": "Requests",
+              "refId": "B"
+            },
+            {
+              "datasource": "Prometheus",
+              "expr": "sum(kube_pod_container_resource_limits{namespace=\"istio-ingress\", pod=~\"gateway-api-istio.*\", resource=\"cpu\"})",
+              "legendFormat": "Limits",
+              "refId": "C"
+            }
+          ],
+          "title": "CPU Usage vs Requests/Limits",
+          "description": "Actual CPU usage compared to requested and limit values",
+          "type": "timeseries"
+        },
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "Utilization %",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": { "type": "linear" },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": { "group": "A", "mode": "none" },
+                "thresholdsStyle": { "mode": "line" }
+              },
+              "mappings": [],
+              "max": 100,
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "yellow", "value": 50 },
+                  { "color": "red", "value": 80 }
+                ]
+              },
+              "unit": "percent"
+            },
+            "overrides": [
+              {
+                "matcher": { "id": "byName", "options": "HPA Target (50%)" },
+                "properties": [
+                  { "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } },
+                  { "id": "custom.lineStyle", "value": { "dash": [10, 10], "fill": "dash" } },
+                  { "id": "custom.lineWidth", "value": 2 }
+                ]
+              }
+            ]
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 },
+          "id": 20,
+          "options": {
+            "legend": { "calcs": ["mean", "max", "lastNotNull"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+            "tooltip": { "mode": "multi", "sort": "desc" }
+          },
+          "pluginVersion": "10.0.0",
+          "targets": [
+            {
+              "datasource": "Prometheus",
+              "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"istio-ingress\", pod=~\"gateway-api-istio.*\", container!=\"\"}[5m])) / sum(kube_pod_container_resource_requests{namespace=\"istio-ingress\", pod=~\"gateway-api-istio.*\", resource=\"cpu\"}) * 100",
+              "legendFormat": "CPU Utilization",
+              "refId": "A"
+            },
+            {
+              "datasource": "Prometheus",
+              "expr": "50",
+              "legendFormat": "HPA Target (50%)",
+              "refId": "B"
+            }
+          ],
+          "title": "CPU Utilization % Over Time",
+          "description": "CPU utilization trend with HPA target threshold",
+          "type": "timeseries"
+        },
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 22 },
           "id": 6,
           "panels": [],
           "title": "Request Metrics",
@@ -212,7 +537,7 @@ data:
             },
             "overrides": []
           },
-          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 23 },
           "id": 7,
           "options": {
             "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
@@ -260,7 +585,7 @@ data:
             },
             "overrides": []
           },
-          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 23 },
           "id": 8,
           "options": {
             "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
@@ -292,7 +617,7 @@ data:
         },
         {
           "collapsed": false,
-          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 16 },
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 31 },
           "id": 9,
           "panels": [],
           "title": "Traffic by Destination",
@@ -328,7 +653,7 @@ data:
             },
             "overrides": []
           },
-          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 17 },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 32 },
           "id": 10,
           "options": {
             "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "right", "showLegend": true },
@@ -376,7 +701,7 @@ data:
             },
             "overrides": []
           },
-          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 17 },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 32 },
           "id": 11,
           "options": {
             "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "right", "showLegend": true },
@@ -396,7 +721,7 @@ data:
         },
         {
           "collapsed": false,
-          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 25 },
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 40 },
           "id": 12,
           "panels": [],
           "title": "Traffic by Hostname",
@@ -432,7 +757,7 @@ data:
             },
             "overrides": []
           },
-          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 26 },
+          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 41 },
           "id": 13,
           "options": {
             "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "right", "showLegend": true },
