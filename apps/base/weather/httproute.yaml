@@ -7,6 +7,7 @@ spec:
   parentRefs:
     - name: gateway-api
       namespace: istio-ingress
+      sectionName: http
   hostnames:
     - weather.local.com
   rules:
