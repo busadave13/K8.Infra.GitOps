@@ -7,7 +7,6 @@ resources:
   - flagger-dashboard-configmap.yaml
   - flagger-canary-overview-configmap.yaml
   - istio-mesh-dashboard-configmap.yaml
-  - istio-service-dashboard-configmap.yaml
   - istio-workload-dashboard-configmap.yaml
   - istio-performance-dashboard-configmap.yaml
   - istio-gateway-dashboard-configmap.yaml
