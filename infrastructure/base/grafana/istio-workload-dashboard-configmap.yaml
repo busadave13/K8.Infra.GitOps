@@ -248,6 +248,26 @@ data:
           "datasource": "Prometheus",
           "fieldConfig": {
             "defaults": {
+              "color": { "mode": "thresholds" },
+              "mappings": [],
+              "min": 0,
+              "thresholds": { "mode": "absolute", "steps": [{ "color": "yellow", "value": null }, { "color": "green", "value": 2 }, { "color": "orange", "value": 8 }, { "color": "red", "value": 10 }] },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 6, "w": 4, "x": 12, "y": 31 },
+          "id": 18,
+          "options": { "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showThresholdLabels": false, "showThresholdMarkers": true },
+          "pluginVersion": "10.0.0",
+          "targets": [{ "datasource": "Prometheus", "expr": "count(kube_pod_status_phase{namespace=~\"$namespace\", pod=~\"$workload.*\", phase=\"Running\"}) or vector(0)", "legendFormat": "Active Pods", "refId": "A" }],
+          "title": "Active Pods",
+          "type": "gauge"
+        },
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": {
+            "defaults": {
               "color": { "mode": "palette-classic" },
               "mappings": [],
               "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
@@ -255,7 +275,7 @@ data:
             },
             "overrides": []
           },
-          "gridPos": { "h": 6, "w": 6, "x": 12, "y": 31 },
+          "gridPos": { "h": 6, "w": 4, "x": 16, "y": 31 },
           "id": 14,
           "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
           "pluginVersion": "10.0.0",
@@ -274,7 +294,7 @@ data:
             },
             "overrides": []
           },
-          "gridPos": { "h": 6, "w": 6, "x": 18, "y": 31 },
+          "gridPos": { "h": 6, "w": 4, "x": 20, "y": 31 },
           "id": 15,
           "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
           "pluginVersion": "10.0.0",
@@ -295,7 +315,8 @@ data:
             "overrides": [
               { "matcher": { "id": "byName", "options": "CPU Usage" }, "properties": [{ "id": "color", "value": { "fixedColor": "blue", "mode": "fixed" } }] },
               { "matcher": { "id": "byName", "options": "CPU Requests" }, "properties": [{ "id": "color", "value": { "fixedColor": "yellow", "mode": "fixed" } }, { "id": "custom.lineStyle", "value": { "dash": [10, 10], "fill": "dash" } }] },
-              { "matcher": { "id": "byName", "options": "CPU Limits" }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }, { "id": "custom.lineStyle", "value": { "dash": [10, 10], "fill": "dash" } }] }
+              { "matcher": { "id": "byName", "options": "CPU Limits" }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }, { "id": "custom.lineStyle", "value": { "dash": [10, 10], "fill": "dash" } }] },
+              { "matcher": { "id": "byName", "options": "HPA Target" }, "properties": [{ "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }, { "id": "custom.lineStyle", "value": { "dash": [5, 5], "fill": "dash" } }, { "id": "custom.lineWidth", "value": 2 }] }
             ]
           },
           "gridPos": { "h": 8, "w": 12, "x": 0, "y": 37 },
@@ -305,9 +326,10 @@ data:
           "targets": [
             { "datasource": "Prometheus", "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=~\"$namespace\", pod=~\"$workload.*\", container!=\"\", container!=\"POD\"}[5m]))", "legendFormat": "CPU Usage", "refId": "A" },
             { "datasource": "Prometheus", "expr": "sum(kube_pod_container_resource_requests{namespace=~\"$namespace\", pod=~\"$workload.*\", resource=\"cpu\", container!=\"\"})", "legendFormat": "CPU Requests", "refId": "B" },
-            { "datasource": "Prometheus", "expr": "sum(kube_pod_container_resource_limits{namespace=~\"$namespace\", pod=~\"$workload.*\", resource=\"cpu\", container!=\"\"})", "legendFormat": "CPU Limits", "refId": "C" }
+            { "datasource": "Prometheus", "expr": "sum(kube_pod_container_resource_limits{namespace=~\"$namespace\", pod=~\"$workload.*\", resource=\"cpu\", container!=\"\"})", "legendFormat": "CPU Limits", "refId": "C" },
+            { "datasource": "Prometheus", "expr": "sum(kube_pod_container_resource_requests{namespace=~\"$namespace\", pod=~\"$workload.*\", resource=\"cpu\", container!=\"\"}) * (max(kube_horizontalpodautoscaler_spec_target_metric{namespace=~\"$namespace\", horizontalpodautoscaler=~\"$workload.*\", metric_name=\"cpu\"}) / 100 or vector(0.8))", "legendFormat": "HPA Target", "refId": "D" }
           ],
-          "title": "CPU Usage vs Requests vs Limits",
+          "title": "CPU Usage vs Requests vs Limits vs HPA Target",
           "type": "timeseries"
         },
         {
