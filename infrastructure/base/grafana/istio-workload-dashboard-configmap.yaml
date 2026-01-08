@@ -359,7 +359,7 @@ data:
           "id": 27,
           "options": { "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showThresholdLabels": false, "showThresholdMarkers": true },
           "pluginVersion": "10.0.0",
-          "targets": [{ "datasource": "Prometheus", "expr": "count(kube_pod_status_phase{namespace=~\"$namespace\", pod=~\"$workload-primary.*\", phase=\"Running\"}) or vector(0)", "legendFormat": "Active Pods", "refId": "A" }],
+          "targets": [{ "datasource": "Prometheus", "expr": "count(kube_pod_status_phase{namespace=~\"$namespace\", pod=~\"$workload.*\", phase=\"Running\"}) or vector(0)", "legendFormat": "Active Pods", "refId": "A" }],
           "title": "Active Pods",
           "type": "gauge"
         },
@@ -370,7 +370,7 @@ data:
           "id": 28,
           "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
           "pluginVersion": "10.0.0",
-          "targets": [{ "datasource": "Prometheus", "expr": "sum(kube_pod_container_status_restarts_total{namespace=~\"$namespace\", pod=~\"$workload-primary.*\"}) or vector(0)", "legendFormat": "Total Restarts", "refId": "A" }],
+          "targets": [{ "datasource": "Prometheus", "expr": "sum(kube_pod_container_status_restarts_total{namespace=~\"$namespace\", pod=~\"$workload.*\"}) or vector(0)", "legendFormat": "Total Restarts", "refId": "A" }],
           "title": "Pod Restarts (Total)",
           "type": "stat"
         },
@@ -381,7 +381,7 @@ data:
           "id": 29,
           "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
           "pluginVersion": "10.0.0",
-          "targets": [{ "datasource": "Prometheus", "expr": "count(kube_pod_status_ready{namespace=~\"$namespace\", pod=~\"$workload-primary.*\", condition=\"false\"}) or vector(0)", "legendFormat": "Not Ready", "refId": "A" }],
+          "targets": [{ "datasource": "Prometheus", "expr": "count(kube_pod_status_ready{namespace=~\"$namespace\", pod=~\"$workload.*\", condition=\"false\"}) or vector(0)", "legendFormat": "Not Ready", "refId": "A" }],
           "title": "Pods Not Ready (Removed from LB)",
           "type": "stat"
         },
@@ -392,7 +392,7 @@ data:
           "id": 30,
           "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
           "pluginVersion": "10.0.0",
-          "targets": [{ "datasource": "Prometheus", "expr": "sum(increase(kube_pod_container_status_restarts_total{namespace=~\"$namespace\", pod=~\"$workload-primary.*\"}[1h])) or vector(0)", "legendFormat": "Restarts (1h)", "refId": "A" }],
+          "targets": [{ "datasource": "Prometheus", "expr": "sum(increase(kube_pod_container_status_restarts_total{namespace=~\"$namespace\", pod=~\"$workload.*\"}[1h])) or vector(0)", "legendFormat": "Restarts (1h)", "refId": "A" }],
           "title": "Restarts (Last Hour)",
           "type": "stat"
         },
@@ -403,7 +403,7 @@ data:
           "id": 31,
           "options": { "legend": { "calcs": ["sum", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
           "pluginVersion": "10.0.0",
-          "targets": [{ "datasource": "Prometheus", "expr": "sum(increase(kube_pod_container_status_restarts_total{namespace=~\"$namespace\", pod=~\"$workload-primary.*\"}[5m]))", "legendFormat": "Restarts", "refId": "A" }],
+          "targets": [{ "datasource": "Prometheus", "expr": "sum(increase(kube_pod_container_status_restarts_total{namespace=~\"$namespace\", pod=~\"$workload.*\"}[5m]))", "legendFormat": "Restarts", "refId": "A" }],
           "title": "Pod Restarts Over Time",
           "type": "timeseries"
         },
@@ -414,7 +414,7 @@ data:
           "id": 32,
           "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
           "pluginVersion": "10.0.0",
-          "targets": [{ "datasource": "Prometheus", "expr": "count(kube_pod_status_phase{namespace=~\"$namespace\", pod=~\"$workload-primary.*\", phase=\"Running\"}) or vector(0)", "legendFormat": "Running", "refId": "A" }, { "datasource": "Prometheus", "expr": "count(kube_pod_status_ready{namespace=~\"$namespace\", pod=~\"$workload-primary.*\", condition=\"false\"}) or vector(0)", "legendFormat": "Not Ready", "refId": "B" }],
+          "targets": [{ "datasource": "Prometheus", "expr": "count(kube_pod_status_phase{namespace=~\"$namespace\", pod=~\"$workload.*\", phase=\"Running\"}) or vector(0)", "legendFormat": "Running", "refId": "A" }, { "datasource": "Prometheus", "expr": "count(kube_pod_status_ready{namespace=~\"$namespace\", pod=~\"$workload.*\", condition=\"false\"}) or vector(0)", "legendFormat": "Not Ready", "refId": "B" }],
           "title": "Pod Status Over Time",
           "type": "timeseries"
         }
