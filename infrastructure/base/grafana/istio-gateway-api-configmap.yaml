@@ -1,12 +1,12 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: istio-gateway-dashboard
+  name: istio-gateway-api
   namespace: monitor
   labels:
     grafana_dashboard: "1"
 data:
-  istio-gateway-dashboard.json: |
+  istio-gateway-api.json: |
     {
       "annotations": {
         "list": []
@@ -779,15 +779,15 @@ data:
       "refresh": "30s",
       "schemaVersion": 38,
       "style": "dark",
-      "tags": ["istio", "gateway", "ingress"],
+      "tags": ["istio", "gateway-api", "ingress"],
       "templating": {
         "list": []
       },
       "time": { "from": "now-1h", "to": "now" },
       "timepicker": {},
       "timezone": "",
-      "title": "Istio / Gateway",
-      "uid": "istio-gateway",
+      "title": "Istio / Gateway API",
+      "uid": "istio-gateway-api",
       "version": 1,
       "weekStart": ""
     }

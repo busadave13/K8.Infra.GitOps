@@ -6,10 +6,10 @@ resources:
   - helmrelease.yaml
   - istio-canary-configmap.yaml
   - istio-canary-overview-configmap.yaml
-  - istio-workload-dashboard-configmap.yaml
-  - istio-gateway-dashboard-configmap.yaml
-  - kubernetes-hpa-dashboard-configmap.yaml
-  - kubernetes-pod-health-dashboard-configmap.yaml
-  - kubernetes-app-metrics-dashboard-configmap.yaml
-  - prometheus-alertmanager-dashboard-configmap.yaml
-  - istio-throttling-dashboard-configmap.yaml
+  - istio-throttling-configmap.yaml
+  - istio-workload-configmap.yaml
+  - istio-gateway-api-configmap.yaml
+  - k8-hpa-configmap.yaml
+  - k8-pod-health-configmap.yaml
+  - k8-app-metrics-configmap.yaml
+  - prometheus-alertmanager-configmap.yaml

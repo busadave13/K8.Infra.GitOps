@@ -766,7 +766,7 @@ data:
         "refresh_intervals": ["5s", "10s", "30s", "1m", "5m"]
       },
       "timezone": "",
-      "title": "Kubernetes / Horizontal Pod Autoscaler",
+      "title": "K8 / Horizontal Pod Autoscaler",
       "uid": "kubernetes-hpa",
       "version": 1,
       "description": "Dashboard for monitoring Kubernetes Horizontal Pod Autoscalers - shows current/desired replicas, min/max limits, and scaling history."
