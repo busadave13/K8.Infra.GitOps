@@ -9,8 +9,8 @@ spec:
   dependsOn:
     - name: istio-base
       namespace: flux-system
-    - name: istio-cni
-      namespace: flux-system
+#    - name: istio-cni
+#      namespace: flux-system
   chart:
     spec:
       chart: istiod

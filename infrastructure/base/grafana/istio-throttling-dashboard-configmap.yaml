@@ -1,12 +1,12 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: service-throttling-dashboard
+  name: istio-throttling-dashboard
   namespace: monitor
   labels:
     grafana_dashboard: "1"
 data:
-  service-throttling-dashboard.json: |
+  istio-throttling-dashboard.json: |
     {
       "annotations": {
         "list": [
@@ -1425,8 +1425,8 @@ data:
       },
       "timepicker": {},
       "timezone": "",
-      "title": "Service Throttling",
-      "uid": "service-throttling",
+      "title": "Istio Throttling",
+      "uid": "istio-throttling",
       "version": 1,
       "weekStart": ""
     }
