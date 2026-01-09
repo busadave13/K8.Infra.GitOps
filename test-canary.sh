@@ -7,6 +7,7 @@ set -e
 # Configuration
 NAMESPACE=${NAMESPACE:-podinfo}
 DEPLOYMENT=${DEPLOYMENT:-podinfo}
+CANARY_NAME=${CANARY_NAME:-podinfo-canary}
 DEPLOYMENT_FILE="apps/base/podinfo/deployment.yaml"
 REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo ".")
 
@@ -132,10 +133,10 @@ monitor_canary() {
     local last_weight=""
     
     while true; do
-        local status=$(kubectl get canary $DEPLOYMENT -n $NAMESPACE -o jsonpath='{.status.phase}' 2>/dev/null || echo "Unknown")
-        local weight=$(kubectl get canary $DEPLOYMENT -n $NAMESPACE -o jsonpath='{.status.canaryWeight}' 2>/dev/null || echo "0")
-        local failed_checks=$(kubectl get canary $DEPLOYMENT -n $NAMESPACE -o jsonpath='{.status.failedChecks}' 2>/dev/null || echo "0")
-        local iterations=$(kubectl get canary $DEPLOYMENT -n $NAMESPACE -o jsonpath='{.status.iterations}' 2>/dev/null || echo "0")
+        local status=$(kubectl get canary $CANARY_NAME -n $NAMESPACE -o jsonpath='{.status.phase}' 2>/dev/null || echo "Unknown")
+        local weight=$(kubectl get canary $CANARY_NAME -n $NAMESPACE -o jsonpath='{.status.canaryWeight}' 2>/dev/null || echo "0")
+        local failed_checks=$(kubectl get canary $CANARY_NAME -n $NAMESPACE -o jsonpath='{.status.failedChecks}' 2>/dev/null || echo "0")
+        local iterations=$(kubectl get canary $CANARY_NAME -n $NAMESPACE -o jsonpath='{.status.iterations}' 2>/dev/null || echo "0")
         
         # Only print if status or weight changed
         if [ "$status" != "$last_status" ] || [ "$weight" != "$last_weight" ]; then
@@ -151,7 +152,7 @@ monitor_canary() {
             "Succeeded")
                 echo ""
                 print_success "Canary deployment succeeded!"
-                kubectl get canary $DEPLOYMENT -n $NAMESPACE
+                kubectl get canary $CANARY_NAME -n $NAMESPACE
                 return 0
                 ;;
             "Failed")
@@ -159,7 +160,7 @@ monitor_canary() {
                 print_error "Canary deployment failed!"
                 echo ""
                 echo "Recent events:"
-                kubectl describe canary $DEPLOYMENT -n $NAMESPACE | tail -15
+                kubectl describe canary $CANARY_NAME -n $NAMESPACE | tail -15
                 return 1
                 ;;
         esac

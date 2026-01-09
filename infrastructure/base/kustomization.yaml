@@ -5,7 +5,6 @@ resources:
   - namespaces
   - crds
   - metrics-server
-  #- vpa
   - istio-cni
   - istio-base
   - istiod
@@ -14,6 +13,4 @@ resources:
   - kube-state-metrics
   - flagger
   - grafana
-  #- kiali
   - aspire
-  #- locust
