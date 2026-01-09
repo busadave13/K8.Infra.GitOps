@@ -2,6 +2,45 @@
 
 ## Completed Tasks
 
+### 2026-01-08
+
+1. **Added Global Rate Limiting to Weather App**
+   - Created `apps/base/weather/envoyfilter-ratelimit.yaml` using Istio local rate limiting
+   - Configuration: 100 requests/minute with 10 burst capacity per pod
+   - Returns HTTP 429 with custom headers: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`
+   - No external rate limit service required (uses Envoy's built-in local rate limiter)
+   - Updated `apps/base/weather/kustomization.yaml` to include EnvoyFilter
+
+2. **Added Rate Limiting & Throttling Section to Istio Workload Dashboard**
+   - Added new collapsible row "Rate Limiting & Throttling" with 8 panels:
+     - Throttled Requests (429s) - stat panel showing total 429 responses
+     - Throttle Rate % - gauge showing percentage of requests being throttled
+     - Request Distribution - pie chart (Allowed/Throttled/Server Errors)
+     - Success Rate % - gauge showing non-5xx response rate
+     - Request Rate by Status - time series (Allowed/Throttled/Errors)
+     - Requests by Response Code - time series with color-coded response codes
+   - File: `infrastructure/base/grafana/istio-workload-dashboard-configmap.yaml`
+
+3. **Added Pod Health & Availability Section to Istio Workload Dashboard**
+   - Added new collapsible row "Pod Health & Availability" with 6 panels:
+     - Active Pods - gauge showing running pods
+     - Pod Restarts (Total) - stat showing cumulative restarts
+     - Pods Not Ready (Removed from LB) - stat showing unhealthy pods
+     - Restarts (Last Hour) - stat showing recent restart activity
+     - Pod Restarts Over Time - time series graph
+     - Pod Status Over Time - time series (Running vs Not Ready)
+   - Uses kube-state-metrics for pod status data
+
+4. **Fixed "Pods Not Ready" Query Bug in Dashboard**
+   - Issue: Panel showed 1 when pod was actually healthy
+   - Root cause: `kube_pod_status_ready` metric reports 3 time series per pod:
+     - `condition="true"` with value=1 (pod is ready)
+     - `condition="false"` with value=0 (pod is NOT not-ready)
+     - `condition="unknown"` with value=0
+   - Old query: `count(kube_pod_status_ready{condition="false"})` - counted time series, not values
+   - Fix: `count(kube_pod_status_ready{condition="false"} == 1)` - only counts where value=1
+   - Applied to both stat panel and time series graph
+
 ### 2025-12-21
 
 1. **Added Staging Environment to GitOps Cluster**

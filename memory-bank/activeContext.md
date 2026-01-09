@@ -1,9 +1,38 @@
 # Active Context
 
 ## Current Focus
-Maintaining and improving the local Kubernetes development environment with GitOps, canary deployments, and observability. Added staging environment support for multi-cluster GitOps.
+Maintaining and improving the local Kubernetes development environment with GitOps, canary deployments, and observability. Added rate limiting, Grafana dashboard improvements, and staging environment support.
 
 ## Recently Completed
+
+### 2026-01-08
+1. **Added Global Rate Limiting to Weather App**
+   - Created EnvoyFilter `apps/base/weather/envoyfilter-ratelimit.yaml`
+   - Uses Istio local rate limiting (no external rate limit service needed)
+   - Default: 100 requests/minute with 10 burst capacity per pod
+   - Returns 429 with headers: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`
+   - Updated `apps/base/weather/kustomization.yaml` to include EnvoyFilter
+
+2. **Added Rate Limiting Section to Istio Workload Dashboard**
+   - New "Rate Limiting & Throttling" section with 8 panels
+   - Throttled Requests (429s) stat panel
+   - Throttle Rate % gauge
+   - Request Distribution pie chart (Allowed/Throttled/Errors)
+   - Success Rate % gauge
+   - Request Rate by Status time series
+   - Requests by Response Code time series
+
+3. **Added Pod Health Section to Istio Workload Dashboard**
+   - New "Pod Health & Availability" section with 6 panels
+   - Active Pods gauge, Pod Restarts stat, Pods Not Ready stat
+   - Restarts (Last Hour) stat
+   - Pod Restarts Over Time graph, Pod Status Over Time graph
+   - Fixed `kube_pod_status_ready` query to check value == 1 (not just count labels)
+
+4. **Fixed Istio Workload Dashboard Issues**
+   - Fixed "Pods Not Ready" showing 1 when pod was healthy
+   - Root cause: `kube_pod_status_ready` has 3 time series per pod (true/false/unknown)
+   - Fix: Added `== 1` filter to only count pods where condition value is actually 1
 
 ### 2025-12-21
 1. **Added Staging Environment to GitOps Cluster**

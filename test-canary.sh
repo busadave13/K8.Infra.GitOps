@@ -85,10 +85,10 @@ update_deployment() {
     echo "Updating $DEPLOYMENT_FILE to version $new_version..."
     
     # Update image tag
-    sed -i "s|image: ghcr.io/stefanprodan/podinfo:[0-9.]*|image: ghcr.io/stefanprodan/podinfo:$new_version|g" "$file"
+    sed -i '' "s|image: ghcr.io/stefanprodan/podinfo:[0-9.]*|image: ghcr.io/stefanprodan/podinfo:$new_version|g" "$file"
     
     # Update version labels
-    sed -i "s|version: [0-9.]*|version: $new_version|g" "$file"
+    sed -i '' "s|version: [0-9.]*|version: $new_version|g" "$file"
     
     print_success "Updated deployment file to version $new_version"
 }
