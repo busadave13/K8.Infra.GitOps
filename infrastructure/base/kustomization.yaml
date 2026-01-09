@@ -9,7 +9,7 @@ resources:
   - istio-base
   - istiod
   - prometheus
-  - prometheus-adapter
+  #- prometheus-adapter
   - kube-state-metrics
   - flagger
   - grafana
