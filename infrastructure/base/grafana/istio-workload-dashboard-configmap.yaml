@@ -432,7 +432,7 @@ data:
       "time": { "from": "now-1h", "to": "now" },
       "timepicker": {},
       "timezone": "",
-      "title": "Istio Workload Dashboard",
+      "title": "Istio / Workload",
       "uid": "istio-workload",
       "version": 1,
       "weekStart": ""

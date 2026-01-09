@@ -786,7 +786,7 @@ data:
       "time": { "from": "now-1h", "to": "now" },
       "timepicker": {},
       "timezone": "",
-      "title": "Istio Gateway Dashboard",
+      "title": "Istio / Gateway",
       "uid": "istio-gateway",
       "version": 1,
       "weekStart": ""

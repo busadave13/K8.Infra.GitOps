@@ -1425,7 +1425,7 @@ data:
       },
       "timepicker": {},
       "timezone": "",
-      "title": "Istio Throttling",
+      "title": "Istio / Throttling",
       "uid": "istio-throttling",
       "version": 1,
       "weekStart": ""
