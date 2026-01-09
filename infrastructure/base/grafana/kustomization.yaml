@@ -4,8 +4,8 @@ namespace: monitor
 resources:
   - httproute.yaml
   - helmrelease.yaml
-  - flagger-dashboard-configmap.yaml
-  - flagger-canary-overview-configmap.yaml
+  - istio-canary-configmap.yaml
+  - istio-canary-overview-configmap.yaml
   - istio-workload-dashboard-configmap.yaml
   - istio-gateway-dashboard-configmap.yaml
   - kubernetes-hpa-dashboard-configmap.yaml
