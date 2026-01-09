@@ -12,20 +12,20 @@ spec:
   maxReplicas: 3
   metrics:
     # Scale based on CPU utilization
-    # - type: Resource
-    #   resource:
-    #     name: cpu
-    #     target:
-    #       type: Utilization
-    #       averageUtilization: 70
-    # Scale based on RPS from Prometheus (via prometheus-adapter)
-    - type: External
-      external:
-        metric:
-          name: weather_requests_per_second
+    - type: Resource
+      resource:
+        name: cpu
         target:
-          type: AverageValue
-          averageValue: "100" # Target 100 RPS per replica
+          type: Utilization
+          averageUtilization: 70
+    # Scale based on RPS from Prometheus (via prometheus-adapter)
+    # - type: External
+    #   external:
+    #     metric:
+    #       name: weather_requests_per_second
+    #     target:
+    #       type: AverageValue
+    #       averageValue: "100" # Target 100 RPS per replica
   behavior:
     scaleDown:
       stabilizationWindowSeconds: 300 # Wait 5 minutes before scaling down
