@@ -381,7 +381,7 @@ data:
           "id": 29,
           "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
           "pluginVersion": "10.0.0",
-          "targets": [{ "datasource": "Prometheus", "expr": "count(kube_pod_status_ready{namespace=~\"$namespace\", pod=~\"$workload.*\", condition=\"false\"}) or vector(0)", "legendFormat": "Not Ready", "refId": "A" }],
+          "targets": [{ "datasource": "Prometheus", "expr": "count(kube_pod_status_ready{namespace=~\"$namespace\", pod=~\"$workload.*\", condition=\"false\"} == 1) or vector(0)", "legendFormat": "Not Ready", "refId": "A" }],
           "title": "Pods Not Ready (Removed from LB)",
           "type": "stat"
         },
@@ -414,7 +414,7 @@ data:
           "id": 32,
           "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
           "pluginVersion": "10.0.0",
-          "targets": [{ "datasource": "Prometheus", "expr": "count(kube_pod_status_phase{namespace=~\"$namespace\", pod=~\"$workload.*\", phase=\"Running\"}) or vector(0)", "legendFormat": "Running", "refId": "A" }, { "datasource": "Prometheus", "expr": "count(kube_pod_status_ready{namespace=~\"$namespace\", pod=~\"$workload.*\", condition=\"false\"}) or vector(0)", "legendFormat": "Not Ready", "refId": "B" }],
+          "targets": [{ "datasource": "Prometheus", "expr": "count(kube_pod_status_phase{namespace=~\"$namespace\", pod=~\"$workload.*\", phase=\"Running\"}) or vector(0)", "legendFormat": "Running", "refId": "A" }, { "datasource": "Prometheus", "expr": "count(kube_pod_status_ready{namespace=~\"$namespace\", pod=~\"$workload.*\", condition=\"false\"} == 1) or vector(0)", "legendFormat": "Not Ready", "refId": "B" }],
           "title": "Pod Status Over Time",
           "type": "timeseries"
         }
