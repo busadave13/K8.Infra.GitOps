@@ -1,0 +1,9 @@
+apiVersion: flagger.app/v1beta1
+kind: AlertProvider
+metadata:
+  name: discord
+  namespace: flagger-system
+spec:
+  type: discord
+  secretRef:
+    name: discord-webhook
