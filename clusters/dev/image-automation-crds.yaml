@@ -1,0 +1,508 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    app.kubernetes.io/instance: flux-system
+    app.kubernetes.io/part-of: flux
+  name: flux-system
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.14.0
+  labels:
+    app.kubernetes.io/instance: flux-system
+    app.kubernetes.io/part-of: flux
+  name: imagerepositories.image.toolkit.fluxcd.io
+spec:
+  group: image.toolkit.fluxcd.io
+  names:
+    kind: ImageRepository
+    listKind: ImageRepositoryList
+    plural: imagerepositories
+    shortNames:
+    - imgRepo
+    - imgrepo
+    singular: imagerepository
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.lastScanTime
+      name: Last scan
+      type: date
+    - jsonPath: .status.canonicalImageName
+      name: Image
+      type: string
+    name: v1beta2
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+        description: ImageRepository is the Schema for the imagerepositories API
+        properties:
+          apiVersion:
+            type: string
+          kind:
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: ImageRepositorySpec defines the desired state of ImageRepository
+            properties:
+              image:
+                description: Image is the name and the tag of the image to scan for tags
+                pattern: ^[a-zA-Z0-9.:\-_/]+$
+                type: string
+              interval:
+                description: Interval is the length of time to wait between scans of the image repository
+                pattern: ^([0-9]+(\.[0-9]+)?(ms|s|m|h))+$
+                type: string
+              secretRef:
+                description: SecretRef can be given the name of a secret containing credentials used for the image registry. Only one auth mechanism may be supplied
+                properties:
+                  name:
+                    type: string
+                required:
+                - name
+                type: object
+              serviceAccountName:
+                description: ServiceAccountName is the name of the Kubernetes service account to impersonate when reconciling this ImageRepository
+                type: string
+              suspend:
+                description: Suspend tells the controller to suspend the reconciliation of this ImageRepository
+                type: boolean
+            required:
+            - image
+            - interval
+            type: object
+          status:
+            description: ImageRepositoryStatus defines the observed state of ImageRepository
+            properties:
+              canonicalImageName:
+                description: CanonicalImageName is the name of the image repository
+                type: string
+              conditions:
+                description: Conditions the latest available observations of the ImageRepository state
+                items:
+                  description: "Condition contains details for one aspect of the current state of this API Resource"
+                  properties:
+                    lastTransitionTime:
+                      format: date-time
+                      type: string
+                    message:
+                      maxLength: 32768
+                      type: string
+                    observedGeneration:
+                      format: int64
+                      minimum: 0
+                      type: integer
+                    reason:
+                      maxLength: 1024
+                      minLength: 1
+                      pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                      type: string
+                    status:
+                      enum:
+                      - "True"
+                      - "False"
+                      - Unknown
+                      type: string
+                    type:
+                      maxLength: 316
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - message
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
+              lastHandledReconcileAt:
+                description: LastHandledReconcileAt is the last time the API Server recorded a successful reconciliation
+                format: date-time
+                type: string
+              lastScanTime:
+                description: LastScanTime is the last time image was scanned
+                format: date-time
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the last observed generation of the ImageRepository object
+                format: int64
+                minimum: 0
+                type: integer
+              tags:
+                description: Tags is the list of tags in the repository
+                items:
+                  type: string
+                type: array
+            type: object
+        type: object
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.14.0
+  labels:
+    app.kubernetes.io/instance: flux-system
+    app.kubernetes.io/part-of: flux
+  name: imagepolicies.image.toolkit.fluxcd.io
+spec:
+  group: image.toolkit.fluxcd.io
+  names:
+    kind: ImagePolicy
+    listKind: ImagePolicyList
+    plural: imagepolicies
+    shortNames:
+    - imgPolicy
+    - imgpolicy
+    singular: imagepolicy
+  scope: Namespaced
+  versions:
+  - name: v1beta2
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+        description: ImagePolicy is the Schema for the imagepolicies API
+        properties:
+          apiVersion:
+            type: string
+          kind:
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: ImagePolicySpec defines the desired state of ImagePolicy
+            properties:
+              imageRepositoryRef:
+                description: ImageRepositoryRef points at the object specifying the image being scanned
+                properties:
+                  name:
+                    description: Name of the referent
+                    type: string
+                required:
+                - name
+                type: object
+              policy:
+                description: Policy gives the particulars of the policy to be followed in selecting the most recent image
+                properties:
+                  alphabetical:
+                    description: Alphabetical set of rules to use for alphabetical ordering of the tags
+                    properties:
+                      order:
+                        default: asc
+                        description: Order specifies the sorting order of the tags
+                        enum:
+                        - asc
+                        - desc
+                        type: string
+                    type: object
+                  numerical:
+                    description: Numerical set of rules to use for numerical ordering of the tags
+                    properties:
+                      order:
+                        default: asc
+                        description: Order specifies the sorting order of the tags
+                        enum:
+                        - asc
+                        - desc
+                        type: string
+                    type: object
+                  semver:
+                    description: SemVer gives a semantic version contraint to use for the most recent tag
+                    properties:
+                      range:
+                        description: Range is a semver range with pre-release concessions, of the form >=x.y.z, ~x.y.z, >x.y.z etc.
+                        type: string
+                    required:
+                    - range
+                    type: object
+                type: object
+              serviceAccountName:
+                description: ServiceAccountName is the name of the Kubernetes service account to impersonate when reconciling this ImagePolicy
+                type: string
+            required:
+            - imageRepositoryRef
+            - policy
+            type: object
+          status:
+            description: ImagePolicyStatus defines the observed state of ImagePolicy
+            properties:
+              conditions:
+                description: Conditions the latest available observations of the ImagePolicy state
+                items:
+                  description: "Condition contains details for one aspect of the current state of this API Resource"
+                  properties:
+                    lastTransitionTime:
+                      format: date-time
+                      type: string
+                    message:
+                      maxLength: 32768
+                      type: string
+                    observedGeneration:
+                      format: int64
+                      minimum: 0
+                      type: integer
+                    reason:
+                      maxLength: 1024
+                      minLength: 1
+                      pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                      type: string
+                    status:
+                      enum:
+                      - "True"
+                      - "False"
+                      - Unknown
+                      type: string
+                    type:
+                      maxLength: 316
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - message
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
+              lastHandledReconcileAt:
+                description: LastHandledReconcileAt is the last time the API Server recorded a successful reconciliation
+                format: date-time
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the last observed generation of the ImagePolicy object
+                format: int64
+                minimum: 0
+                type: integer
+              pattern:
+                description: Pattern the pattern used to match image tags
+                type: string
+              latestImage:
+                description: LatestImage gives the first in the list of latest images scanned by policy, precedence is given to the highest alpha/numeric tag, or to the latest semver tag
+                type: string
+            type: object
+        type: object
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.14.0
+  labels:
+    app.kubernetes.io/instance: flux-system
+    app.kubernetes.io/part-of: flux
+  name: imageupdateautomations.image.toolkit.fluxcd.io
+spec:
+  group: image.toolkit.fluxcd.io
+  names:
+    kind: ImageUpdateAutomation
+    listKind: ImageUpdateAutomationList
+    plural: imageupdateautomations
+    shortNames:
+    - imgUpdateAuto
+    - imgupdateauto
+    singular: imageupdateautomation
+  scope: Namespaced
+  versions:
+  - name: v1beta1
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+        description: ImageUpdateAutomation is the Schema for the imageupdateautomations API
+        properties:
+          apiVersion:
+            type: string
+          kind:
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: ImageUpdateAutomationSpec defines the desired state of ImageUpdateAutomation
+            properties:
+              git:
+                description: Git contains all the git-specific definitions
+                properties:
+                  checkout:
+                    description: Checkout gives the parameters for cloning the git repository, before updating manifests
+                    properties:
+                      ref:
+                        description: Ref gives a branch, tag or commit to clone
+                        properties:
+                          branch:
+                            description: Branch to check out
+                            type: string
+                          commit:
+                            description: Commit SHA to check out
+                            type: string
+                          semver:
+                            description: SemVer tag constraint. See https://masterminds.github.io/semver/#checking-version-constraints for more info
+                            type: string
+                          tag:
+                            description: Tag to check out
+                            type: string
+                        type: object
+                    type: object
+                  commit:
+                    description: Commit is by default generated in the format [timestamp] Image(s) updated by [spec.serviceAccountName]
+                    properties:
+                      author:
+                        description: Author gives the email and optionally the name to use as the author of commits pushed by the automation controller
+                        properties:
+                          email:
+                            description: Email gives the email to use as the author of commits
+                            type: string
+                          name:
+                            description: Name gives the name to use as the author of commits
+                            type: string
+                        required:
+                        - email
+                        type: object
+                      messageTemplate:
+                        description: MessageTemplate provides a template for the commit message, into which will be inserted the details of the image(s) that were updated. This is only used if the template contains the string IMAGES; otherwise, the template is used as-is for the commit message
+                        type: string
+                      signingKey:
+                        description: SigningKey provides the option to sign commits made by the automation controller, with a GPG key stored as a secret in the same namespace as the controller. For more information, see https://fluxcd.io/flux/security/signature/
+                        properties:
+                          secretRef:
+                            description: SecretRef holds the name to a secret that contains a GPG signing keypair `passphrase` (optional), `identity` and `secretKey`. Passphrase only needs to be specified if provided in order to decrypt the GPG secret key
+                            properties:
+                              name:
+                                type: string
+                            required:
+                            - name
+                            type: object
+                        required:
+                        - secretRef
+                        type: object
+                    required:
+                    - author
+                    type: object
+                  push:
+                    description: Push gives the parameters for pushing the update back to the branch
+                    properties:
+                      branch:
+                        description: Branch specifies the branch to push to; Defaults to empty, which will result in pushing to the branch the YAML was pulled from
+                        type: string
+                      shallowCloneDepth:
+                        description: ShallowCloneDepth may only be set to configure shallow clones of the branch to fetch the files to be updated; the value may be set to 0 to fetch the entire history
+                        minimum: 0
+                        type: integer
+                    type: object
+                required:
+                - commit
+                type: object
+              interval:
+                description: Interval gives an lower bound on how often the automation controller will reconcile the ImageUpdateAutomation resource
+                pattern: ^([0-9]+(\.[0-9]+)?(ms|s|m|h))+$
+                type: string
+              serviceAccountName:
+                description: ServiceAccountName is the name of the Kubernetes service account to impersonate when reconciling this ImageUpdateAutomation resource
+                type: string
+              sourceRef:
+                description: SourceRef refers to the source object which has been scanned; the ImagePolicy controller uses this to know which to pull the ImageUpdateAutomation resource from, if it does not have a managed-by label; and to discover any ImageUpdateAutomation resources which refer to a particular ImageRepository resource, if it does
+                properties:
+                  apiVersion:
+                    description: API version of the referent
+                    type: string
+                  kind:
+                    description: Kind of the referent
+                    enum:
+                    - GitRepository
+                    type: string
+                  name:
+                    description: Name of the referent
+                    type: string
+                type: object
+              suspend:
+                description: Suspend tells the controller to suspend the reconciliation of this ImageUpdateAutomation resource
+                type: boolean
+              update:
+                description: Update gives the particulars of the update strategy to be followed in the update of the manifests
+                properties:
+                  path:
+                    description: Path is a glob pattern for the set of files to be updated
+                    type: string
+                  strategy:
+                    default: Setters
+                    description: Strategy is the strategy to update image references; default is 'Setters', in which case the implementation the automation object refers to in `.metadata.annotations['fluxcd.io/automation']` or `.metadata.labels['app.fluxcd.io/managed-by']`; if this or those do not specify an automation object, an error will result
+                    enum:
+                    - Setters
+                    type: string
+                required:
+                - path
+                type: object
+            required:
+            - interval
+            - sourceRef
+            - update
+            - git
+            type: object
+          status:
+            description: ImageUpdateAutomationStatus defines the observed state of ImageUpdateAutomation
+            properties:
+              conditions:
+                description: Conditions the latest available observations of the ImageUpdateAutomation state
+                items:
+                  description: "Condition contains details for one aspect of the current state of this API Resource"
+                  properties:
+                    lastTransitionTime:
+                      format: date-time
+                      type: string
+                    message:
+                      maxLength: 32768
+                      type: string
+                    observedGeneration:
+                      format: int64
+                      minimum: 0
+                      type: integer
+                    reason:
+                      maxLength: 1024
+                      minLength: 1
+                      pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                      type: string
+                    status:
+                      enum:
+                      - "True"
+                      - "False"
+                      - Unknown
+                      type: string
+                    type:
+                      maxLength: 316
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - message
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
+              lastAutomationRunTime:
+                description: LastAutomationRunTime records the last time the controller ran this automation through to completion (even if no updates were made)
+                format: date-time
+                type: string
+              lastHandledReconcileAt:
+                description: LastHandledReconcileAt is the last time the API Server recorded a successful reconciliation
+                format: date-time
+                type: string
+              lastPushCommit:
+                description: LastPushCommit records the SHA of the last commit made by the controller, for this automation object
+                type: string
+              lastPushTime:
+                description: LastPushTime records the time of the last pushed commit by the controller, for this automation object
+                format: date-time
+                type: string
+              observedGeneration:
+                description: ObservedGeneration is the last observed generation of the ImageUpdateAutomation object
+                format: int64
+                minimum: 0
+                type: integer
+            type: object
+        type: object
