@@ -5,8 +5,6 @@ resources:
   - metrics-server-helm.yaml
   - istio-helm.yaml
   - prometheus-helm.yaml
-  - kiali-helm.yaml
   - aspire-helm.yaml
   - grafana-helm.yaml
   - flagger-helm.yaml
-  - vpa-helm.yaml

@@ -1,12 +1,12 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: flagger-grafana-dashboard
+  name: istio-canary-dashboard
   namespace: monitor
   labels:
     grafana_dashboard: "1"
 data:
-  flagger-istio.json: |-
+  istio-canary.json: |-
     {
       "annotations": {
         "list": [
@@ -1587,7 +1587,7 @@ data:
       "refresh": "10s",
       "schemaVersion": 16,
       "style": "dark",
-      "tags": [],
+      "tags": ["istio", "canary"],
       "templating": {
         "list": [
           {
@@ -1688,7 +1688,7 @@ data:
         ]
       },
       "timezone": "",
-      "title": "Istio Canary",
-      "uid": "flagger-istio",
+      "title": "Istio / Canary",
+      "uid": "istio-canary",
       "version": 3
     }

@@ -4,15 +4,12 @@ namespace: monitor
 resources:
   - httproute.yaml
   - helmrelease.yaml
-  - flagger-dashboard-configmap.yaml
-  - flagger-canary-overview-configmap.yaml
-  - istio-mesh-dashboard-configmap.yaml
-  - istio-service-dashboard-configmap.yaml
-  - istio-workload-dashboard-configmap.yaml
-  - istio-performance-dashboard-configmap.yaml
-  - istio-gateway-dashboard-configmap.yaml
-  - kubernetes-hpa-dashboard-configmap.yaml
-  - kubernetes-pod-health-dashboard-configmap.yaml
-  - kubernetes-app-metrics-dashboard-configmap.yaml
-  - prometheus-alertmanager-dashboard-configmap.yaml
-  - vpa-dashboard-configmap.yaml
+  - istio-canary-configmap.yaml
+  - istio-canary-overview-configmap.yaml
+  - istio-throttling-configmap.yaml
+  - istio-workload-configmap.yaml
+  - istio-gateway-api-configmap.yaml
+  - k8-hpa-configmap.yaml
+  - k8-pod-health-configmap.yaml
+  - k8-app-metrics-configmap.yaml
+  - prometheus-alertmanager-configmap.yaml
