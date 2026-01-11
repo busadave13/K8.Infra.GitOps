@@ -6,4 +6,3 @@ resources:
   - service.yaml
   - httproute.yaml
   - canary.yaml
-  - verticalpodautoscaler.yaml
