@@ -2,7 +2,6 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: weather-primary
-  namespace: weather
 spec:
   scaleTargetRef:
     apiVersion: apps/v1

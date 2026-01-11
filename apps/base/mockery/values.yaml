@@ -1,0 +1,115 @@
+# Default values for mockery Helm chart
+
+name: mockery
+namespace: mockery
+replicaCount: 3
+
+image:
+  name: mockery:latest
+  pullPolicy: Always
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+# Application configuration
+config:
+  # ASP.NET Core Environment (always use Production for Kubernetes)
+  # Git repository configuration is baked into the Docker image via appsettings.Production.json
+  aspnetcoreEnvironment: "Production"
+  # OpenTelemetry configuration
+  openTelemetry:
+    # Service name for OpenTelemetry
+    serviceName: "Mockery"
+    # OTLP endpoint for traces/metrics/logs - points to Aspire dashboard in monitor namespace
+    otlpEndpoint: "http://aspire.monitor.svc.cluster.local:18889"
+    # OTLP protocol (grpc or http/protobuf)
+    otlpProtocol: "grpc"
+    # OTLP API key for Aspire dashboard authentication
+    otlpApiKey: "aspire"
+
+# Secrets configuration for Git repository access
+# The deployment always references a secret named "{name}-secrets" (e.g., "mockery-secrets")
+# with a key "git-access-token" containing the GitHub Personal Access Token.
+# 
+# You can either:
+# 1. Provide gitAccessToken here (Helm will create the secret)
+# 2. Create the secret externally (via SealedSecrets, External Secrets, kubectl, etc.)
+#
+# For push operations (POST/DELETE /api/mocks), a valid token with 'repo' scope is required.
+secrets:
+  # Git access token for private repositories
+  # For GitHub: Create a Personal Access Token with 'repo' scope (starts with 'ghp_')
+  # IMPORTANT: Never commit actual tokens to version control! Use --set or external secret management.
+  gitAccessToken: ""
+
+# Persistence for Git repository storage
+persistence:
+  # Enable persistence (required for Git mode)
+  enabled: true
+  # Storage class for dynamic provisioning (leave empty for default)
+  storageClass: ""
+  # Access mode for the volume
+  accessMode: ReadWriteOnce
+  # Size of the persistent volume
+  size: 1Gi
+  # Optional: Use existing PVC instead of creating a new one
+  existingClaim: ""
+
+# HTTPRoute configuration for Gateway API
+httpRoute:
+  # Enable HTTPRoute creation
+  enabled: true
+  # Hostname for the route
+  hostname: "mockery.local.com"
+  # Gateway reference
+  gateway:
+    name: gateway-api
+    namespace: istio-ingress
+
+# Canary deployment configuration (Flagger)
+canary:
+  # Enable Canary resource creation
+  enabled: true
+  # Provider for traffic management
+  provider: istio
+  # Progress deadline in seconds
+  progressDeadlineSeconds: 60
+  # Traffic policy TLS mode
+  tlsMode: ISTIO_MUTUAL
+  # Analysis configuration
+  analysis:
+    # How often to run analysis
+    interval: 1m
+    # Max number of failed checks before rollback
+    threshold: 5
+    # Max traffic weight for canary
+    maxWeight: 50
+    # Traffic weight increment step
+    stepWeight: 10
+    # Minimum success rate threshold (percentage)
+    successRateMin: 99
+    # Maximum p99 latency threshold (milliseconds)
+    latencyP99Max: 500
+  # Metric templates reference
+  metricsTemplates:
+    namespace: flagger-system
+    successRate: request-success-rate
+    latency: request-duration
+  # Load testing configuration
+  loadTest:
+    # Enable load testing webhook
+    enabled: true
+    # Load tester URL
+    url: "http://flagger-loadtester.flagger-system/"
+    # Timeout for webhook
+    timeout: 5s

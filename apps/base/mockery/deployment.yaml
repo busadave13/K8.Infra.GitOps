@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mockery
+  labels:
+    app: mockery
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: mockery
+  template:
+    metadata:
+      labels:
+        app: mockery
+    spec:
+      serviceAccountName: mockery-sa
+      containers:
+        - name: mockery
+          image: ghcr.io/busadave13/mockery:0.1.49
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: Production
+            - name: OTEL_SERVICE_NAME
+              value: "Mockery"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://aspire.monitor.svc.cluster.local:18889"
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: "grpc"
+            - name: OTEL_EXPORTER_OTLP_HEADERS
+              value: "x-otlp-api-key=aspire"
+            # - name: MockRepository__Git__AccessToken
+            #   valueFrom:
+            #     secretKeyRef:
+            #       name: mockery-secrets
+            #       key: git-access-token
+            #       optional: true
+          # envFrom:
+          #   - configMapRef:
+          #       name: mockery-config
+          resources:
+            limits:
+              cpu: 250m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          startupProbe:
+            httpGet:
+              path: /health/startup
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 30
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          volumeMounts:
+            - name: git-storage
+              mountPath: /app/mocks
+      volumes:
+        - name: git-storage
+          persistentVolumeClaim:
+            claimName: mockery-pvc
