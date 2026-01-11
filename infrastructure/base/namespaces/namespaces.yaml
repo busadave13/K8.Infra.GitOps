@@ -37,3 +37,10 @@ metadata:
   name: weather
   labels:
     istio-injection: enabled
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mockery
+  labels:
+    istio-injection: enabled
