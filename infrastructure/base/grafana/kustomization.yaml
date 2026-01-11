@@ -12,4 +12,4 @@ resources:
   - k8-hpa-configmap.yaml
   - k8-pod-health-configmap.yaml
   - k8-app-metrics-configmap.yaml
-  - prometheus-alertmanager-configmap.yaml
+  - prometheus-alertmanager-dashboard-configmap.yaml
