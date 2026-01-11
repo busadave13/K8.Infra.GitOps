@@ -5,6 +5,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 2m
+  targetNamespace: mockery
   chart:
     spec:
       chart: mockery
@@ -14,6 +15,7 @@ spec:
         name: github
         namespace: flux-system
   install:
+    createNamespace: false
     remediation:
       retries: 3
   upgrade:
