@@ -11,4 +11,4 @@ spec:
   path: ./image-automation
   prune: true
   wait: false
-  suspend: true
+  suspend: false
