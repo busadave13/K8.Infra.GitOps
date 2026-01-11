@@ -17,7 +17,7 @@ spec:
       serviceAccountName: mockery-sa
       containers:
         - name: mockery
-          image: ghcr.io/busadave13/mockery:0.1.50 # {"$imagepolicy": "flux-system:mockery"}
+          image: ghcr.io/busadave13/mockery:0.1.51 # {"$imagepolicy": "flux-system:mockery"}
           imagePullPolicy: Always
           ports:
             - name: http
