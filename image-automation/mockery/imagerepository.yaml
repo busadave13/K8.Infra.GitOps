@@ -1,0 +1,11 @@
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: mockery
+  namespace: flux-system
+spec:
+  image: ghcr.io/busadave13/mockery
+  interval: 2m
+  # Uncomment if GHCR is private:
+  # secretRef:
+  #   name: ghcr-credentials
