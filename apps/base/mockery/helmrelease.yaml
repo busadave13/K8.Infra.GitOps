@@ -14,6 +14,11 @@ spec:
         kind: HelmRepository
         name: github
         namespace: flux-system
+  values:
+    persistence:
+      enabled: true
+      name: mockery-pvc
+      size: 1Gi
   install:
     createNamespace: false
     remediation:
