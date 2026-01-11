@@ -1,4 +1,4 @@
-# K8.Local.Dev.Environment
+# K8.Infra.GitOps
 
 A FluxCD GitOps repository for deploying a fully-featured local Kubernetes development environment using Docker Desktop.
 
@@ -8,7 +8,7 @@ This repository provides an automated, reproducible local Kubernetes environment
 
 - **Service Mesh**: Istio in **sidecar mode** with Gateway API for traffic management
 - **Progressive Delivery**: Flagger for automated canary deployments
-- **Observability**: Prometheus, Grafana, and Kiali
+- **Observability**: Prometheus and Grafana
 - **Developer Tools**: .NET Aspire Dashboard
 - **GitOps**: FluxCD for declarative infrastructure management
 
@@ -20,9 +20,9 @@ This repository provides an automated, reproducible local Kubernetes environment
 ├─────────────────────────────────────────────────────────────────┤
 │  FluxCD (GitOps)  │  Istio (Sidecar)  │  Flagger (Canary)       │
 ├─────────────────────────────────────────────────────────────────┤
-│     Observability (Prometheus, Grafana, Kiali)                  │
+│           Observability (Prometheus, Grafana)                    │
 ├─────────────────────────────────────────────────────────────────┤
-│              Gateway API (*.tools.com → Services)                │
+│   Gateway API (*.tools.com, *.local.com → Services)             │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -33,14 +33,12 @@ This environment uses Istio's **sidecar proxy injection** mode where:
 - Namespaces with `istio-injection: enabled` label have automatic injection
 - Proxies handle mTLS, traffic routing, load balancing, and observability
 - Metrics are collected from sidecar proxies on port 15090 (`/stats/prometheus`)
-- istio-cni handles network setup without requiring elevated privileges
 
 ### Key Components
 
 | Component | Purpose |
 |-----------|---------|
 | **istiod** | Istio control plane - manages proxy configuration and certificates |
-| **istio-cni** | CNI plugin for pod network setup during sidecar injection |
 | **istio-proxy** | Envoy sidecar injected into each application pod |
 | **Gateway API** | Kubernetes-native ingress with Istio implementation |
 
@@ -51,23 +49,29 @@ This environment uses Istio's **sidecar proxy injection** mode where:
 │   └── dev/          # Development cluster configuration
 ├── infrastructure/    # Platform infrastructure
 │   ├── base/         # Base configurations (shared)
-│   │   ├── istio-base/      # Istio CRDs
-│   │   ├── istio-cni/       # Istio CNI plugin
-│   │   ├── istiod/          # Istio control plane
-│   │   ├── gateway-api/     # Gateway + HPA + PDB
+│   │   ├── aspire/          # .NET Aspire Dashboard
+│   │   ├── crds/            # Custom Resource Definitions (Gateway API)
 │   │   ├── flagger/         # Flagger + loadtester + metric-templates
-│   │   ├── prometheus/      # Metrics with sidecar scraping
+│   │   ├── gateway-api/     # Gateway + HPA + PDB
 │   │   ├── grafana/         # Dashboards (Istio Mesh, Istio Canary)
-│   │   └── kiali/           # Service mesh visualization
+│   │   ├── istio-base/      # Istio CRDs
+│   │   ├── istiod/          # Istio control plane
+│   │   ├── kube-state-metrics/ # Kubernetes state metrics
+│   │   ├── metrics-server/  # Resource metrics for HPA
+│   │   ├── namespaces/      # Namespace definitions
+│   │   ├── prometheus/      # Metrics with sidecar scraping
+│   │   └── repos/           # Helm repositories
 │   └── dev/          # Dev-specific overlays
 ├── apps/             # Application deployments
 │   ├── base/         # Base app configurations
-│   │   └── podinfo/  # Example app with canary deployment
+│   │   ├── fluxcd/   # FluxCD alerts and providers (Discord)
+│   │   ├── mockery/  # API mocking service
+│   │   ├── podinfo/  # Example app with canary deployment
+│   │   ├── repos/    # App Helm repositories
+│   │   └── weather/  # Weather API with canary deployment
 │   └── dev/          # Dev-specific overlays
-└── scripts/          # Testing and verification scripts
-    ├── test-canary.sh        # Canary deployment test
-    ├── k6-load-test.js       # k6 load testing script
-    └── verify-sidecar-mode.sh # Sidecar mode verification
+├── docker-compose.yml # Docker Compose for local development tools
+└── test-canary.sh    # Canary deployment test script
 ```
 
 ## Prerequisites
@@ -75,31 +79,28 @@ This environment uses Istio's **sidecar proxy injection** mode where:
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) with Kubernetes enabled
 - [FluxCD CLI](https://fluxcd.io/flux/installation/) (`flux`)
 - [kubectl](https://kubernetes.io/docs/tasks/tools/)
-- [k6](https://k6.io/docs/getting-started/installation/) (for load testing)
 - GitHub account with repository access
 
 ## Quick Start
 
 ### 1. Configure Local Hosts
 
-Add to your hosts file (`C:\Windows\System32\drivers\etc\hosts` on Windows, `/etc/hosts` on Linux/Mac):
+Add to your hosts file (`/etc/hosts` on macOS/Linux, `C:\Windows\System32\drivers\etc\hosts` on Windows):
 
 ```
 127.0.0.1 prometheus.tools.com
 127.0.0.1 alertmanager.tools.com
-127.0.0.1 kiali.tools.com
 127.0.0.1 grafana.tools.com
 127.0.0.1 aspire.tools.com
 127.0.0.1 podinfo.local.com
 127.0.0.1 mockery.local.com
 127.0.0.1 weather.local.com
-127.0.0.1 locust.tools.com
 ```
 
 ### 2. Create SSH Deploy Key
 
 ```bash
-ssh-keygen -t ed25519 -C "flux-local-dev" -f $env:USERPROFILE\.ssh\flux-local-dev-deploy-key
+ssh-keygen -t ed25519 -C "flux-gitops" -f ~/.ssh/flux-gitops-deploy-key
 ```
 
 Add the public key to your GitHub repository as a deploy key with write access.
@@ -108,19 +109,32 @@ Add the public key to your GitHub repository as a deploy key with write access.
 
 ```bash
 flux bootstrap github \
-  --owner=busadave13 \
-  --repository=K8.Local.Dev.Environment \
+  --owner=<your-github-username> \
+  --repository=K8.Infra.GitOps \
   --branch=dev \
   --path=./clusters/dev \
-  --private-key-file=$env:USERPROFILE\.ssh\flux-local-dev-deploy-key
+  --private-key-file=~/.ssh/flux-gitops-deploy-key
 ```
 
-### 4. Configure Slack Alerts (Optional)
+### 4. Configure Discord Alerts (Optional)
+
+Create secrets for Discord notifications:
 
 ```bash
-kubectl create secret generic slack-url \
-  --from-literal=address=https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK \
+# For Flagger canary notifications
+kubectl create secret generic discord-webhook \
+  --from-literal=address=https://discord.com/api/webhooks/YOUR/WEBHOOK \
+  -n flagger-system
+
+# For FluxCD notifications
+kubectl create secret generic discord-flux-webhook \
+  --from-literal=address=https://discord.com/api/webhooks/YOUR/WEBHOOK \
   -n flux-system
+
+# For Prometheus Alertmanager
+kubectl create secret generic alertmanager-discord \
+  --from-literal=webhook-url=https://discord.com/api/webhooks/YOUR/WEBHOOK \
+  -n monitor
 ```
 
 ### 5. Verify Sidecar Mode
@@ -128,11 +142,9 @@ kubectl create secret generic slack-url \
 After deployment, verify that sidecar mode is properly configured:
 
 ```bash
-# Run verification script
-./scripts/verify-sidecar-mode.sh
-
-# Or manually check pods have 2/2 containers
+# Check pods have 2/2 containers (app + istio-proxy)
 kubectl get pods -n podinfo
+kubectl get pods -n weather
 ```
 
 ### 6. Access Services
@@ -142,10 +154,12 @@ Once deployed, access the tools via browser:
 | Service | URL |
 |---------|-----|
 | Prometheus | http://prometheus.tools.com |
+| Alertmanager | http://alertmanager.tools.com |
 | Grafana | http://grafana.tools.com |
-| Kiali | http://kiali.tools.com |
 | Aspire Dashboard | http://aspire.tools.com |
-| Podinfo (Example App) | http://podinfo.tools.com |
+| Podinfo | http://podinfo.local.com |
+| Weather API | http://weather.local.com |
+| Mockery | http://mockery.local.com |
 
 ## Deployed Components
 
@@ -154,7 +168,6 @@ Once deployed, access the tools via browser:
 |-----------|-------------|
 | Istio Base | Service mesh CRDs |
 | Istiod | Istio control plane (sidecar mode) |
-| Istio CNI | Network plugin for sidecar injection |
 | Gateway API | Kubernetes-native ingress with Istio |
 | Flagger | Progressive delivery and canary deployments |
 | Flagger Loadtester | Load testing for canary analysis |
@@ -162,27 +175,32 @@ Once deployed, access the tools via browser:
 | kube-state-metrics | Kubernetes object metrics |
 | Prometheus | Metrics collection with Istio sidecar scraping (port 15090) |
 | Grafana | Dashboards and visualization |
-| Kiali | Service mesh observability |
 | Aspire | .NET microservices dashboard |
 
 ### Applications
 | Component | Description |
 |-----------|-------------|
-| HTTPRoutes | Traffic routing for all tools |
-| FluxCD Alerts | Slack notifications for deployments |
-| Mockery | API mocking service |
-| Weather | Weather API with sensor mocking |
 | Podinfo | Example app with canary deployment |
+| Weather | Weather API with canary deployment and rate limiting |
+| Mockery | API mocking service |
+| FluxCD Alerts | Discord notifications for deployments |
 
 ## Canary Deployments
 
 ### How Canary Works with Flagger
 
-1. Flagger watches the `podinfo` Deployment
+1. Flagger watches Deployments with a Canary resource (podinfo, weather)
 2. When the image or configuration changes, Flagger creates a canary version
-3. Traffic is gradually shifted from primary to canary (10% steps up to 50%)
+3. Traffic is gradually shifted from primary to canary (10% steps)
 4. Metrics are evaluated at each step using Prometheus (success rate ≥99%, latency P99 <500ms)
 5. If metrics pass thresholds, canary is promoted; otherwise, it's rolled back
+
+### Canary Configurations
+
+| App | Max Weight | Step Weight | Analysis Interval |
+|-----|------------|-------------|-------------------|
+| Podinfo | 100% | 10% | 1m |
+| Weather | 50% | 10% | 1m |
 
 ### Metric Templates
 
@@ -199,9 +217,9 @@ These metrics use `reporter="destination"` to query sidecar proxy telemetry.
 
 ```bash
 # Using the test script
-./scripts/test-canary.sh
+./test-canary.sh
 
-# Or manually update the image
+# Or manually update the deployment
 kubectl set image deployment/podinfo -n podinfo podinfod=ghcr.io/stefanprodan/podinfo:6.1.0
 ```
 
@@ -209,7 +227,7 @@ kubectl set image deployment/podinfo -n podinfo podinfod=ghcr.io/stefanprodan/po
 
 ```bash
 # Watch canary status
-kubectl get canary podinfo -n podinfo -w
+kubectl get canary -A -w
 
 # Check Flagger logs
 kubectl logs -n flagger-system deploy/flagger -f
@@ -219,146 +237,6 @@ kubectl logs -n flagger-system deploy/flagger -f
 ```
 
 ## Load Testing
-
-### Locust (Web UI)
-
-Locust is a distributed load testing tool with a web-based UI deployed in-cluster. It allows you to define user behavior in Python and run tests with real-time monitoring.
-
-**Web UI**: http://locust.tools.com
-
-#### Architecture
-
-```
-┌─────────────────────────────────────────────────┐
-│              Locust Cluster                      │
-├─────────────────────────────────────────────────┤
-│   ┌──────────────────┐                          │
-│   │   Locust Master  │  ◀─── Web UI             │
-│   │   (port 8089)    │       locust.tools.com   │
-│   └────────┬─────────┘                          │
-│            │ coordinates                         │
-│   ┌────────┴─────────┐                          │
-│   │  Locust Workers  │  (2 replicas default)    │
-│   │   (scalable)     │                          │
-│   └──────────────────┘                          │
-│            │                                     │
-│            ▼ HTTP requests                       │
-│   ┌──────────────────────────────────────────┐  │
-│   │  Target Services (mockery, podinfo)       │  │
-│   └──────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────┘
-```
-
-#### Quick Start
-
-1. **Access the Web UI**: http://locust.tools.com
-2. **Start a test**: Enter number of users and spawn rate, click "Start swarming"
-3. **Monitor in real-time**: Request statistics, response time charts, failures
-
-#### Pre-configured Tests
-
-The deployment includes a test script with two user classes:
-
-| User Class | Host | Endpoints | Rate | Weight |
-|------------|------|-----------|------|--------|
-| MockeryUser | mockery.mockery.svc | `/api/mock`, `/health` | 10 req/s | 3 (~75%) |
-| PodinfoUser | podinfo.podinfo.svc:9898 | `/`, `/version`, `/env`, `/healthz` | 5 req/s | 1 (~25%) |
-
-#### Scaling Workers
-
-```bash
-# Scale to 5 workers for higher load
-kubectl scale deployment locust-worker -n locust --replicas=5
-
-# Scale to 10 workers
-kubectl scale deployment locust-worker -n locust --replicas=10
-
-# Check worker status
-kubectl get pods -n locust -l component=worker
-```
-
-#### Custom Test Scripts
-
-Edit the ConfigMap and restart:
-
-```bash
-kubectl edit configmap locust-scripts -n locust
-kubectl rollout restart deployment locust-master locust-worker -n locust
-```
-
-Example custom user class:
-
-```python
-from locust import HttpUser, task, between
-
-class CustomUser(HttpUser):
-    host = "http://your-service.namespace.svc.cluster.local"
-    wait_time = between(1, 3)
-    
-    @task(5)
-    def main_endpoint(self):
-        self.client.get("/api/v1/resource")
-    
-    @task(1)
-    def health(self):
-        self.client.get("/health")
-```
-
-#### CLI Usage
-
-```bash
-# Run a headless test
-kubectl exec -n locust deploy/locust-master -- \
-  locust --headless -u 100 -r 10 -t 5m \
-  --host http://mockery.mockery.svc.cluster.local \
-  -f /scripts/locustfile.py
-```
-
-#### Troubleshooting Locust
-
-```bash
-# Workers not connecting to master
-kubectl get svc locust-master -n locust
-kubectl logs -n locust -l component=worker --tail=20
-
-# Test script errors
-kubectl logs -n locust deploy/locust-master
-
-# Test connectivity from worker
-kubectl exec -n locust deploy/locust-worker -- \
-  curl -s http://mockery.mockery.svc.cluster.local/health
-```
-
-### k6 (CLI)
-
-k6 is a JavaScript-based load testing tool. Note: k6 uses HTTP/2 connection reuse by default, which may cause uneven load distribution. The scripts have `noConnectionReuse: true` configured.
-
-**Available Scripts** (located in `k6/` directory):
-| Script | Default RPS | Target |
-|--------|-------------|--------|
-| `combined-load-test.js` | 5/20/25 (Mockery/Weather/Podinfo) | All services |
-| `weather-load-test.js` | 200 | weather.local.com |
-| `mockery-load-test.js` | 200 | mockery.local.com |
-| `podinfo-load-test.js` | 10 | podinfo.local.com |
-
-```bash
-# Run combined load test (5/20/25 RPS for Mockery/Weather/Podinfo)
-docker-compose run --rm k6 run /scripts/combined-load-test.js
-
-# Run weather load test (200 RPS for 30 minutes)
-docker-compose run --rm k6 run /scripts/weather-load-test.js
-
-# Run mockery load test
-docker-compose run --rm k6 run /scripts/mockery-load-test.js
-
-# With custom settings
-docker-compose run --rm -e K6_MOCKERY_RPS=50 -e K6_WEATHER_RPS=50 -e K6_PODINFO_RPS=20 -e K6_DURATION=10m k6 run /scripts/combined-load-test.js
-
-# Run in detached mode
-docker-compose run -d --rm k6 run /scripts/combined-load-test.js
-```
-
-See [k6/README.md](k6/README.md) for detailed documentation.
 
 ### Using Flagger Loadtester
 
@@ -371,7 +249,15 @@ kubectl get pods -n flagger-system -l app=loadtester
 # Manually trigger load test
 kubectl exec -n flagger-system deploy/flagger-loadtester -- \
   hey -z 1m -q 10 -c 2 http://podinfo.podinfo:9898/
+
+# Load test weather service
+kubectl exec -n flagger-system deploy/flagger-loadtester -- \
+  hey -z 1m -q 10 -c 2 http://weather-canary.weather/
 ```
+
+### Using Docker Compose
+
+The repository includes a `docker-compose.yml` for running local development tools.
 
 ## Common Commands
 
@@ -435,9 +321,6 @@ kubectl port-forward -n monitor svc/prometheus-server 9090:80
 
 # Port-forward Grafana
 kubectl port-forward -n monitor svc/grafana 8080:8080
-
-# Port-forward Kiali
-kubectl port-forward -n istio-system svc/kiali 20001:20001
 
 # Check Istio sidecar metrics in Prometheus
 kubectl exec -n monitor deploy/prometheus-server -c prometheus-server -- \
@@ -558,20 +441,19 @@ The following dashboards are pre-configured:
 
 | Dashboard | Description |
 |-----------|-------------|
-| Istio Mesh Dashboard | Overall mesh health, request rates, latencies |
-| Istio Gateway Dashboard | Gateway/Ingress traffic metrics, requests by hostname and destination |
-| Istio Service Dashboard | Per-service request volume, success rate, latency (P50/P90/P99) |
-| Istio Workload Dashboard | Per-workload inbound/outbound metrics and source tracking |
-| Istio Performance Dashboard | Istiod control plane metrics (xDS pushes, CPU/memory, proxy sync) |
 | Istio Canary | Flagger canary deployment metrics (success rate, duration, traffic weight) |
+| Istio Canary Overview | Overview of all canary deployments across namespaces |
+| Istio Gateway API | Gateway/Ingress traffic metrics, requests by hostname and destination |
+| Istio Throttling | Rate limiting and throttling metrics |
+| Istio Workload | Per-workload inbound/outbound metrics and source tracking |
+| Kubernetes App Metrics | Container metrics (request rate, error rate, CPU/memory usage) |
 | Kubernetes HPA | Horizontal Pod Autoscaler metrics (replicas, CPU utilization) |
 | Kubernetes Pod Health | Pod health & readiness (active pods, restarts, termination reasons) |
-| Kubernetes App Metrics | Container metrics (request rate, error rate, CPU/memory usage) |
 | Prometheus Alertmanager | Alertmanager monitoring (alerts, silences, notifications) |
 
 ### Dashboard Details
 
-#### Istio Gateway Dashboard
+#### Istio Gateway API Dashboard
 - Gateway request volume (total requests through ingress)
 - Gateway success rate (non-5xx responses)
 - Gateway P99 latency
@@ -580,14 +462,7 @@ The following dashboards are pre-configured:
 - Request duration percentiles (P50, P90, P99)
 - Requests by destination service
 - P99 latency by destination
-- Requests by hostname (*.tools.com routes)
-
-#### Istio Service Dashboard
-- Request volume by service
-- Success rate (percentage of non-5xx responses)
-- Request duration percentiles (P50, P90, P99)
-- Requests by response code
-- Incoming requests by source workload
+- Requests by hostname (*.tools.com, *.local.com routes)
 
 #### Istio Workload Dashboard
 - Inbound/Outbound request volume and success rates
@@ -595,15 +470,6 @@ The following dashboards are pre-configured:
 - Inbound request duration
 - Outbound requests by destination service
 - Outbound request duration by destination
-
-#### Istio Performance Dashboard
-- Total CDS/EDS pushes from istiod
-- Number of connected proxies
-- Configuration conflicts
-- xDS push rate by type
-- xDS push time percentiles
-- Istiod CPU and memory usage
-- Proxy convergence time distribution
 
 ### Istio Canary Dashboard Panels
 
