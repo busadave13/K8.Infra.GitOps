@@ -12,8 +12,8 @@ spec:
       rate(
         istio_requests_total{
           reporter="destination",
-          destination_workload_namespace="{{ namespace }}",
-          destination_workload=~"{{ target }}",
+          destination_service_namespace="{{ namespace }}",
+          destination_service_name=~"{{ target }}(-primary)?",
           response_code!~"5.*"
         }[5m]
       )
@@ -23,8 +23,8 @@ spec:
       rate(
         istio_requests_total{
           reporter="destination",
-          destination_workload_namespace="{{ namespace }}",
-          destination_workload=~"{{ target }}"
+          destination_service_namespace="{{ namespace }}",
+          destination_service_name=~"{{ target }}(-primary)?"
         }[5m]
       )
     )

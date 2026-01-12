@@ -14,8 +14,8 @@ spec:
         rate(
           istio_request_duration_milliseconds_bucket{
             reporter="destination",
-            destination_workload_namespace="{{ namespace }}",
-            destination_workload=~"{{ target }}"
+            destination_service_namespace="{{ namespace }}",
+            destination_service_name=~"{{ target }}(-primary)?"
           }[5m]
         )
       ) by (le)
