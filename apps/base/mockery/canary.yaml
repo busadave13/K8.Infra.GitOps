@@ -43,7 +43,7 @@ spec:
         url: "http://flagger-loadtester.flagger-system/"
         timeout: 5s
         metadata:
-          cmd: "hey -z 1m -q 10 -c 2 http://mockery-canary.mockery/"
+          cmd: "hey -z 1m -q 10 -c 2 http://mockery-canary.mockery/health/ready"
     alerts:
       - name: "discord"
         severity: error
