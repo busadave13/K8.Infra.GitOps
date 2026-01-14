@@ -67,7 +67,7 @@ This design introduces a k6 webhook service that:
 | ID | Goal | Priority |
 |----|------|----------|
 | G1 | GitOps-driven management of k6 test scripts | P0 |
-| G2 | Secure authentication to Azure DevOps Git | P0 |
+| G2 | Secure authentication to GitHub Git | P0 |
 | G3 | Native integration with Flagger canary analysis | P0 |
 | G4 | Environment-specific test execution (dev/staging/prod) | P1 |
 | G5 | Reusable test libraries and helpers | P1 |
@@ -98,104 +98,69 @@ This design introduces a k6 webhook service that:
 
 ### 3.1 High-Level Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                              Azure DevOps                                    │
-│  ┌───────────────────────┐         ┌───────────────────────┐                │
-│  │   k6-tests Repository │         │  cluster-config Repo  │                │
-│  │                       │         │  (GitOps Manifests)   │                │
-│  └───────────┬───────────┘         └───────────┬───────────┘                │
-└──────────────┼─────────────────────────────────┼────────────────────────────┘
-               │                                 │
-               │ HTTPS (OIDC)                    │ HTTPS (OIDC)
-               │                                 │
-┌──────────────┼─────────────────────────────────┼────────────────────────────┐
-│              │              AKS Cluster        │                            │
-│              ▼                                 ▼                            │
-│  ┌───────────────────────────────────────────────────────────┐              │
-│  │                      Flux (flux-system)                    │              │
-│  │  ┌─────────────────┐     ┌─────────────────┐              │              │
-│  │  │ GitRepository   │     │ GitRepository   │              │              │
-│  │  │ (k6-tests)      │     │ (cluster-config)│              │              │
-│  │  └────────┬────────┘     └────────┬────────┘              │              │
-│  └───────────┼───────────────────────┼───────────────────────┘              │
-│              │                       │                                       │
-│              ▼                       ▼                                       │
-│  ┌───────────────────────────────────────────────────────────┐              │
-│  │                  flagger-system Namespace                  │              │
-│  │                                                            │              │
-│  │  ┌──────────────────────────────────────────────────────┐ │              │
-│  │  │              k6-webhook Deployment                    │ │              │
-│  │  │  ┌────────────────┐   ┌────────────────────────────┐ │ │              │
-│  │  │  │ initContainer  │   │    k6-webhook Container    │ │ │              │
-│  │  │  │ (git-clone)    │──▶│                            │ │ │              │
-│  │  │  │                │   │  /scripts (emptyDir)       │ │ │              │
-│  │  │  └────────────────┘   │  ├── common/               │ │ │              │
-│  │  │                       │  ├── workloads/            │ │ │              │
-│  │  │                       │  └── environments/         │ │ │              │
-│  │  │                       └────────────────────────────┘ │ │              │
-│  │  └──────────────────────────────────────────────────────┘ │              │
-│  │                                                            │              │
-│  │  ┌─────────────────┐     ┌─────────────────────────────┐ │              │
-│  │  │     Flagger     │────▶│   MetricTemplates           │ │              │
-│  │  │                 │     │   - request-success-rate    │ │              │
-│  │  │                 │     │   - request-duration        │ │              │
-│  │  └────────┬────────┘     └─────────────────────────────┘ │              │
-│  └───────────┼────────────────────────────────────────────────┘              │
-│              │                                                               │
-│              │ Webhook Call                                                  │
-│              ▼                                                               │
-│  ┌───────────────────────────────────────────────────────────┐              │
-│  │                   App Namespace (e.g., weather)            │              │
-│  │  ┌─────────────────┐     ┌─────────────────────────────┐ │              │
-│  │  │  Canary CRD     │     │  Deployment (weather)       │ │              │
-│  │  │                 │     │  ├── primary                │ │              │
-│  │  │                 │     │  └── canary                 │ │              │
-│  │  └─────────────────┘     └─────────────────────────────┘ │              │
-│  └───────────────────────────────────────────────────────────┘              │
-│                                                                              │
-│  ┌───────────────────────────────────────────────────────────┐              │
-│  │                    monitor Namespace                       │              │
-│  │  ┌─────────────────────────────────────────────────────┐ │              │
-│  │  │              Prometheus                              │ │              │
-│  │  │  - Collects Istio metrics                           │ │              │
-│  │  │  - Receives k6 metrics (remote write)               │ │              │
-│  │  └─────────────────────────────────────────────────────┘ │              │
-│  └───────────────────────────────────────────────────────────┘              │
-└──────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph GitHub["GitHub"]
+        k6repo["k6-tests Repository"]
+        configrepo["cluster-config Repo<br/>(GitOps Manifests)"]
+    end
+
+    subgraph AKS["AKS Cluster"]
+        subgraph flux["Flux (flux-system)"]
+            gitrepo1["GitRepository<br/>(k6-tests)"]
+            gitrepo2["GitRepository<br/>(cluster-config)"]
+        end
+
+        subgraph flagger-ns["flagger-system Namespace"]
+            subgraph k6deploy["k6-webhook Deployment"]
+                cronjob["CronJob<br/>(k6-scripts-sync)"]
+                pvc["PVC<br/>(k6-scripts)"]
+                k6container["k6-webhook Container<br/>/scripts (PVC mount)"]
+            end
+            flagger["Flagger"]
+            metrics["MetricTemplates<br/>- request-success-rate<br/>- request-duration"]
+        end
+
+        subgraph app-ns["App Namespace (e.g., weather)"]
+            canary["Canary CRD"]
+            deployment["Deployment (weather)<br/>├── primary<br/>└── canary"]
+        end
+
+        subgraph monitor-ns["monitor Namespace"]
+            prometheus["Prometheus<br/>- Collects Istio metrics<br/>- Receives k6 metrics"]
+        end
+    end
+
+    k6repo -->|"HTTPS (PAT/App)"| gitrepo1
+    configrepo -->|"HTTPS (PAT/App)"| gitrepo2
+    gitrepo1 --> cronjob
+    gitrepo2 --> flagger-ns
+    cronjob --> pvc
+    pvc --> k6container
+    flagger --> metrics
+    flagger -->|"Webhook Call"| k6container
+    k6container -->|"Load Test"| deployment
+    k6container -->|"Push Metrics"| prometheus
 ```
 
 ### 3.2 Request Flow Sequence
 
-```
-┌─────────┐     ┌─────────┐     ┌────────────┐     ┌─────────────┐     ┌───────────┐
-│ Flagger │     │k6-webhook│    │ k6 Runtime │     │ Canary Pod  │     │Prometheus │
-└────┬────┘     └────┬────┘     └─────┬──────┘     └──────┬──────┘     └─────┬─────┘
-     │               │                │                   │                  │
-     │  POST /       │                │                   │                  │
-     │  {cmd: "k6 run..."}            │                   │                  │
-     │──────────────▶│                │                   │                  │
-     │               │                │                   │                  │
-     │               │  spawn k6      │                   │                  │
-     │               │───────────────▶│                   │                  │
-     │               │                │                   │                  │
-     │               │                │   HTTP requests   │                  │
-     │               │                │──────────────────▶│                  │
-     │               │                │   responses       │                  │
-     │               │                │◀──────────────────│                  │
-     │               │                │                   │                  │
-     │               │                │   push metrics    │                  │
-     │               │                │───────────────────┼─────────────────▶│
-     │               │                │                   │                  │
-     │               │  exit code     │                   │                  │
-     │               │◀───────────────│                   │                  │
-     │               │                │                   │                  │
-     │  200 OK / 500 │                │                   │                  │
-     │◀──────────────│                │                   │                  │
-     │               │                │                   │                  │
-     │  Continue/    │                │                   │                  │
-     │  Rollback     │                │                   │                  │
-     │               │                │                   │                  │
+```mermaid
+sequenceDiagram
+    participant Flagger
+    participant k6-webhook
+    participant k6 Runtime
+    participant Canary Pod
+    participant Prometheus
+
+    Flagger->>k6-webhook: POST / {cmd: "k6 run..."}
+    k6-webhook->>k6 Runtime: spawn k6
+    k6 Runtime->>Canary Pod: HTTP requests
+    Canary Pod-->>k6 Runtime: responses
+    k6 Runtime->>Prometheus: push metrics
+    k6 Runtime-->>k6-webhook: exit code
+    k6-webhook-->>Flagger: 200 OK / 500
+    Note over Flagger: Continue / Rollback
 ```
 
 ---
@@ -217,48 +182,59 @@ The k6-webhook is a lightweight HTTP service that receives webhook calls from Fl
 
 #### 4.1.2 Lifecycle
 
-```
-Pod Start
-    │
-    ▼
-┌───────────────────────────────────────┐
-│ initContainer: git-clone              │
-│ - Clone k6-tests repo                 │
-│ - Mount to /scripts                   │
-│ - Use Azure Workload Identity token   │
-└───────────────────────────────────────┘
-    │
-    ▼
-┌───────────────────────────────────────┐
-│ container: k6-webhook                 │
-│ - Serve HTTP on :80                   │
-│ - Execute k6 from /scripts            │
-│ - Return exit code as HTTP status     │
-└───────────────────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph CronJob["CronJob: k6-scripts-sync"]
+        clone["Initial clone on first run"]
+        pull["Periodic git pull (every 5 min)"]
+        write["Writes to PVC: k6-scripts"]
+    end
+
+    subgraph PVC["PVC: k6-scripts"]
+        storage["(shared storage)"]
+    end
+
+    subgraph Deployment["Deployment: k6-webhook"]
+        mount["Mounts PVC at /scripts"]
+        serve["Serve HTTP on :80"]
+        execute["Execute k6 from /scripts"]
+        status["Return exit code as HTTP status"]
+        auto["Scripts auto-updated by CronJob"]
+    end
+
+    clone --> write
+    pull --> write
+    write --> storage
+    storage --> mount
+    mount --> serve
+    serve --> execute
+    execute --> status
 ```
 
 ### 4.2 Git Sync Strategy
 
-#### Option A: Init Container (Recommended for Phase 1)
+#### Option A: CronJob with PVC (Recommended)
 
 **Pros:**
-- Simple implementation
-- No additional sidecars
-- Scripts loaded at pod start
+- Scripts updated without pod restart
+- Configurable sync interval
+- Single clone, periodic pulls (efficient)
+- Shared storage across replicas
 
 **Cons:**
-- Requires pod restart for script updates
-- Slight delay on first request after deployment
+- Requires PersistentVolumeClaim
+- Slight delay between commit and availability (up to sync interval)
 
-#### Option B: Sidecar Git-Sync (Phase 2)
+#### Option B: Sidecar Git-Sync (Alternative)
 
 **Pros:**
-- Real-time script updates
-- No pod restarts needed
+- Near real-time script updates
+- No external jobs needed
 
 **Cons:**
-- Additional resource overhead
+- Additional resource overhead per pod
 - More complex deployment
+- Each replica syncs independently
 
 ### 4.3 Resource Requirements
 
@@ -365,7 +341,7 @@ metadata:
     app.kubernetes.io/part-of: flagger
 ```
 
-### 6.2 ServiceAccount with Workload Identity
+### 6.2 ServiceAccount
 
 ```yaml
 apiVersion: v1
@@ -373,13 +349,115 @@ kind: ServiceAccount
 metadata:
   name: k6-webhook
   namespace: flagger-system
-  annotations:
-    azure.workload.identity/client-id: "${AZURE_CLIENT_ID}"
-  labels:
-    azure.workload.identity/use: "true"
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k6-scripts-sync
+  namespace: flagger-system
 ```
 
-### 6.3 Deployment
+### 6.3 PersistentVolumeClaim
+
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: k6-scripts
+  namespace: flagger-system
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: managed-csi  # Azure Disk or adjust for your cluster
+  resources:
+    requests:
+      storage: 1Gi
+```
+
+### 6.4 CronJob for Git Sync
+
+```yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: k6-scripts-sync
+  namespace: flagger-system
+spec:
+  schedule: "*/5 * * * *"  # Every 5 minutes
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 300
+      template:
+        spec:
+          serviceAccountName: k6-scripts-sync
+          restartPolicy: OnFailure
+          containers:
+            - name: git-sync
+              image: alpine/git:2.43.0
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -e
+                  REPO_DIR="/scripts/k6-tests"
+                  REPO_URL="https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_ORG}/${GITHUB_REPO}.git"
+                  
+                  if [ -d "$REPO_DIR/.git" ]; then
+                    echo "Repository exists, pulling latest changes..."
+                    cd "$REPO_DIR"
+                    git fetch origin ${GIT_BRANCH:-main}
+                    git reset --hard origin/${GIT_BRANCH:-main}
+                    echo "Pull complete."
+                  else
+                    echo "Cloning repository for the first time..."
+                    rm -rf "$REPO_DIR"
+                    git clone --depth 1 --single-branch --branch ${GIT_BRANCH:-main} "$REPO_URL" "$REPO_DIR"
+                    echo "Clone complete."
+                  fi
+                  
+                  echo "Current files:"
+                  ls -la "$REPO_DIR"
+              env:
+                - name: GITHUB_ORG
+                  valueFrom:
+                    configMapKeyRef:
+                      name: k6-webhook-config
+                      key: github-org
+                - name: GITHUB_REPO
+                  valueFrom:
+                    configMapKeyRef:
+                      name: k6-webhook-config
+                      key: github-repo
+                - name: GIT_BRANCH
+                  valueFrom:
+                    configMapKeyRef:
+                      name: k6-webhook-config
+                      key: git-branch
+                - name: GITHUB_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: github-credentials
+                      key: token
+              volumeMounts:
+                - name: scripts
+                  mountPath: /scripts
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  cpu: 100m
+                  memory: 64Mi
+          volumes:
+            - name: scripts
+              persistentVolumeClaim:
+                claimName: k6-scripts
+```
+
+### 6.5 Deployment
 
 ```yaml
 apiVersion: apps/v1
@@ -398,64 +476,11 @@ spec:
     metadata:
       labels:
         app: k6-webhook
-        azure.workload.identity/use: "true"
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "80"
     spec:
       serviceAccountName: k6-webhook
-      
-      initContainers:
-        - name: git-clone
-          image: alpine/git:2.43.0
-          command:
-            - /bin/sh
-            - -c
-            - |
-              set -e
-              echo "Cloning k6-tests repository..."
-              
-              # Get Azure AD token for Azure DevOps
-              TOKEN=$(cat /var/run/secrets/azure/tokens/azure-identity-token)
-              
-              # Clone with token auth
-              git clone --depth 1 \
-                --single-branch \
-                --branch ${GIT_BRANCH:-main} \
-                https://oauth2:${TOKEN}@dev.azure.com/${ADO_ORG}/${ADO_PROJECT}/_git/k6-tests \
-                /scripts
-              
-              echo "Clone complete. Files:"
-              ls -la /scripts
-          env:
-            - name: ADO_ORG
-              valueFrom:
-                configMapKeyRef:
-                  name: k6-webhook-config
-                  key: ado-org
-            - name: ADO_PROJECT
-              valueFrom:
-                configMapKeyRef:
-                  name: k6-webhook-config
-                  key: ado-project
-            - name: GIT_BRANCH
-              valueFrom:
-                configMapKeyRef:
-                  name: k6-webhook-config
-                  key: git-branch
-          volumeMounts:
-            - name: scripts
-              mountPath: /scripts
-            - name: azure-identity-token
-              mountPath: /var/run/secrets/azure/tokens
-              readOnly: true
-          resources:
-            requests:
-              cpu: 10m
-              memory: 32Mi
-            limits:
-              cpu: 100m
-              memory: 64Mi
       
       containers:
         - name: webhook
@@ -476,6 +501,7 @@ spec:
           volumeMounts:
             - name: scripts
               mountPath: /scripts
+              subPath: k6-tests
               readOnly: true
           resources:
             requests:
@@ -499,17 +525,11 @@ spec:
       
       volumes:
         - name: scripts
-          emptyDir: {}
-        - name: azure-identity-token
-          projected:
-            sources:
-              - serviceAccountToken:
-                  audience: api://AzureADTokenExchange
-                  expirationSeconds: 3600
-                  path: azure-identity-token
+          persistentVolumeClaim:
+            claimName: k6-scripts
 ```
 
-### 6.4 Service
+### 6.6 Service
 
 ```yaml
 apiVersion: v1
@@ -530,7 +550,7 @@ spec:
       name: http
 ```
 
-### 6.5 ConfigMap
+### 6.7 ConfigMap
 
 ```yaml
 apiVersion: v1
@@ -539,83 +559,67 @@ metadata:
   name: k6-webhook-config
   namespace: flagger-system
 data:
-  ado-org: "your-org"
-  ado-project: "your-project"
+  github-org: "your-org"
+  github-repo: "k6-tests"
   git-branch: "main"
   environment: "dev"
 ```
 
-### 6.6 HelmRelease (Alternative to Raw Manifests)
+### 6.8 Flux Kustomization
 
 ```yaml
-apiVersion: helm.toolkit.fluxcd.io/v2
-kind: HelmRelease
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
 metadata:
   name: k6-webhook
   namespace: flux-system
 spec:
-  interval: 30m
-  releaseName: k6-webhook
-  targetNamespace: flagger-system
+  interval: 10m
+  path: ./infrastructure/k6-webhook
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
   dependsOn:
     - name: flagger
-      namespace: flux-system
-  chart:
-    spec:
-      chart: loadtester
-      version: "0.35.0"
-      sourceRef:
-        kind: HelmRepository
-        name: flagger
-        namespace: flux-system
-  values:
-    replicaCount: 1
-    image:
-      repository: ghcr.io/grafana/flagger-k6-webhook
-      tag: latest
-    
-    serviceAccount:
-      create: true
-      annotations:
-        azure.workload.identity/client-id: "${AZURE_CLIENT_ID}"
-    
-    podLabels:
-      azure.workload.identity/use: "true"
-    
-    cmd:
-      timeout: 5m
-    
-    resources:
-      requests:
-        cpu: 50m
-        memory: 128Mi
-      limits:
-        cpu: 200m
-        memory: 256Mi
-    
-    # Custom init container for git clone
-    extraInitContainers:
-      - name: git-clone
-        image: alpine/git:2.43.0
-        command: ["/bin/sh", "-c"]
-        args:
-          - |
-            git clone --depth 1 https://dev.azure.com/org/project/_git/k6-tests /scripts
-        volumeMounts:
-          - name: scripts
-            mountPath: /scripts
-    
-    extraVolumes:
-      - name: scripts
-        emptyDir: {}
-    
-    extraVolumeMounts:
-      - name: scripts
-        mountPath: /scripts
-        readOnly: true
+  healthChecks:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: k6-webhook
+      namespace: flagger-system
 ```
 
-### 6.7 Flux GitRepository for k6-tests
+### 6.9 Kustomization Directory Structure
+
+```
+infrastructure/k6-webhook/
+├── kustomization.yaml
+├── namespace.yaml
+├── serviceaccount.yaml
+├── pvc.yaml
+├── cronjob.yaml
+├── deployment.yaml
+├── service.yaml
+└── configmap.yaml
+```
+
+#### kustomization.yaml
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: flagger-system
+resources:
+  - namespace.yaml
+  - serviceaccount.yaml
+  - pvc.yaml
+  - cronjob.yaml
+  - deployment.yaml
+  - service.yaml
+  - configmap.yaml
+```
+
+### 6.10 Flux GitRepository for k6-tests
 
 ```yaml
 apiVersion: source.toolkit.fluxcd.io/v1
@@ -625,11 +629,11 @@ metadata:
   namespace: flux-system
 spec:
   interval: 1m
-  url: https://dev.azure.com/your-org/your-project/_git/k6-tests
+  url: https://github.com/your-org/k6-tests
   ref:
     branch: main
   secretRef:
-    name: ado-git-credentials
+    name: github-credentials
   ignore: |
     # Exclude files not needed in cluster
     README.md
@@ -641,53 +645,37 @@ spec:
 
 ## 7. Security Design
 
-### 7.1 Azure Workload Identity Flow
+### 7.1 GitHub Authentication Flow
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                               Azure AD                                       │
-│  ┌─────────────────────────────────────────────────────────────────────────┐│
-│  │                    Federated Identity Credential                        ││
-│  │  Subject: system:serviceaccount:flagger-system:k6-webhook               ││
-│  │  Issuer: https://oidc.prod-aks.azure.com/{tenant-id}/{aks-id}          ││
-│  └─────────────────────────────────────────────────────────────────────────┘│
-│                                      │                                       │
-│                                      ▼                                       │
-│  ┌─────────────────────────────────────────────────────────────────────────┐│
-│  │                    Managed Identity                                      ││
-│  │  - Azure DevOps Reader permission                                       ││
-│  │  - Client ID: ${AZURE_CLIENT_ID}                                        ││
-│  └─────────────────────────────────────────────────────────────────────────┘│
-└──────────────────────────────────────────────────────────────────────────────┘
-                                       │
-                                       │ OIDC Token Exchange
-                                       ▼
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                               AKS Cluster                                    │
-│  ┌─────────────────────────────────────────────────────────────────────────┐│
-│  │                    k6-webhook Pod                                        ││
-│  │  ServiceAccount: k6-webhook                                             ││
-│  │  Annotations:                                                           ││
-│  │    azure.workload.identity/client-id: ${AZURE_CLIENT_ID}                ││
-│  └─────────────────────────────────────────────────────────────────────────┘│
-└──────────────────────────────────────────────────────────────────────────────┘
-                                       │
-                                       │ Azure AD Token
-                                       ▼
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                            Azure DevOps                                      │
-│  ┌─────────────────────────────────────────────────────────────────────────┐│
-│  │                    k6-tests Repository                                   ││
-│  │  Access: Read-only                                                      ││
-│  └─────────────────────────────────────────────────────────────────────────┘│
-└──────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph GitHub1["GitHub"]
+        subgraph Auth["GitHub App or Personal Access Token"]
+            repo["Repository: k6-tests"]
+            perms["Permissions: Contents (read)"]
+        end
+    end
+
+    subgraph AKS["AKS Cluster"]
+        subgraph Pod["k6-webhook Pod"]
+            sa["ServiceAccount: k6-webhook"]
+            secret["Secret: github-credentials<br/>- token: GitHub PAT or App token"]
+        end
+    end
+
+    subgraph GitHub2["GitHub"]
+        k6tests["k6-tests Repository<br/>Access: Read-only"]
+    end
+
+    Auth -->|"HTTPS + Token Auth"| Pod
+    Pod -->|"Git Clone with Token"| k6tests
 ```
 
 ### 7.2 Security Policies
 
 | Policy | Implementation |
 |--------|----------------|
-| No long-lived secrets | Azure Workload Identity with OIDC |
+| Short-lived or scoped tokens | GitHub App tokens or fine-grained PATs |
 | Least privilege | Read-only Git access |
 | Network isolation | Namespace-level NetworkPolicies |
 | Pod security | Restricted PSS profile |
@@ -1487,8 +1475,8 @@ webhooks:
 
 ### Migration Checklist
 
-- [ ] Azure Workload Identity configured
-- [ ] k6-tests repository created
+- [ ] GitHub credentials secret configured
+- [ ] k6-tests repository created in GitHub
 - [ ] Flux GitRepository configured
 - [ ] k6-webhook deployed
 - [ ] Test scripts for all workloads
@@ -1507,11 +1495,12 @@ webhooks:
 | Scenario | Detection | Response | Recovery |
 |----------|-----------|----------|----------|
 | k6 threshold breach | Exit code ≠ 0 | Canary rollback | Fix code, redeploy |
-| Git clone failure | Init container fails | Pod stays Pending | Check credentials |
+| Git sync CronJob failure | CronJob fails | Scripts become stale | Check credentials, PVC |
+| Scripts PVC not ready | Webhook returns 500 | Canary rollback | Trigger manual CronJob run |
 | Webhook timeout | Flagger timeout | Canary rollback | Increase timeout |
 | Prometheus unavailable | Metrics export fails | Test completes (no metrics) | Restore Prometheus |
 | k6-webhook OOM | Container OOMKilled | Pod restarts | Increase memory limit |
-| Invalid test script | k6 parse error | Exit code ≠ 0 | Fix script, redeploy |
+| Invalid test script | k6 parse error | Exit code ≠ 0 | Fix script, wait for sync |
 | Target unreachable | HTTP connection fails | Threshold breach | Check network policies |
 
 ### 14.2 Circuit Breaker Patterns
@@ -1542,6 +1531,16 @@ export default function() {
   annotations:
     summary: "k6-webhook is down"
     description: "Canary deployments will fail without load testing"
+
+# Alert when git sync CronJob is failing
+- alert: K6ScriptsSyncFailing
+  expr: kube_job_status_failed{job_name=~"k6-scripts-sync.*"} > 0
+  for: 15m
+  labels:
+    severity: warning
+  annotations:
+    summary: "k6 scripts sync is failing"
+    description: "Test scripts may be stale. Check CronJob logs."
 ```
 
 ---
@@ -1614,19 +1613,40 @@ webhooks:
 
 ## Appendix B: Troubleshooting Guide
 
-### Issue: Pod stuck in Init:0/1
+### Issue: Scripts not updating
 
-**Cause:** Git clone failing
+**Cause:** CronJob failing or not running
 
 **Debug:**
 ```bash
-kubectl logs deployment/k6-webhook -n flagger-system -c git-clone
+# Check CronJob status
+kubectl get cronjob k6-scripts-sync -n flagger-system
+
+# Check recent job runs
+kubectl get jobs -n flagger-system -l job-name=k6-scripts-sync --sort-by=.metadata.creationTimestamp
+
+# Check job logs
+kubectl logs job/k6-scripts-sync-<timestamp> -n flagger-system
 ```
 
 **Resolution:**
-- Check Azure Workload Identity configuration
-- Verify Git repository URL
-- Check network connectivity
+- Check GitHub credentials secret
+- Verify PVC is bound and has space
+- Manually trigger a job: `kubectl create job --from=cronjob/k6-scripts-sync k6-scripts-sync-manual -n flagger-system`
+
+### Issue: Webhook returns 500 - scripts not found
+
+**Cause:** PVC empty or CronJob hasn't run yet
+
+**Debug:**
+```bash
+# Check if PVC has data
+kubectl exec deployment/k6-webhook -n flagger-system -- ls -la /scripts
+```
+
+**Resolution:**
+- Manually trigger CronJob to populate PVC
+- Check PVC is correctly mounted
 
 ### Issue: Test passes but canary fails
 
@@ -1657,7 +1677,7 @@ kubectl describe metrictemplate request-success-rate -n flagger-system
 - [k6 Documentation](https://k6.io/docs/)
 - [Flagger Documentation](https://flagger.app/)
 - [Flux GitOps Toolkit](https://fluxcd.io/docs/)
-- [Azure Workload Identity](https://azure.github.io/azure-workload-identity/)
+- [GitHub Apps Documentation](https://docs.github.com/en/apps)
 - [Istio Service Mesh](https://istio.io/docs/)
 
 ---
@@ -1667,3 +1687,7 @@ kubectl describe metrictemplate request-success-rate -n flagger-system
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2026-01-12 | Platform Team | Initial design |
+| 1.1 | 2026-01-14 | Platform Team | Changed test storage from Azure DevOps to GitHub |
+| 1.2 | 2026-01-14 | Platform Team | Changed from init container to CronJob with PVC for git sync |
+| 1.3 | 2026-01-14 | Platform Team | Updated to use FluxCD Kustomization instead of Helm |
+| 1.4 | 2026-01-14 | Platform Team | Converted ASCII diagrams to Mermaid |
