@@ -1,0 +1,71 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: k6-scripts-sync
+  namespace: flagger-system
+spec:
+  schedule: "*/5 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 300
+      template:
+        spec:
+          serviceAccountName: k6-scripts-sync
+          restartPolicy: OnFailure
+          containers:
+            - name: git-sync
+              image: alpine/git:2.43.0
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -e
+                  REPO_DIR="/scripts/k6-tests"
+                  REPO_URL="https://github.com/${GITHUB_ORG}/${GITHUB_REPO}.git"
+                  if [ -d "$REPO_DIR/.git" ]; then
+                    echo "Repository exists, pulling latest changes..."
+                    cd "$REPO_DIR"
+                    git fetch origin ${GIT_BRANCH:-main}
+                    git reset --hard origin/${GIT_BRANCH:-main}
+                    echo "Pull complete."
+                  else
+                    echo "Cloning repository for the first time..."
+                    rm -rf "$REPO_DIR"
+                    git clone --depth 1 --single-branch --branch ${GIT_BRANCH:-main} "$REPO_URL" "$REPO_DIR"
+                    echo "Clone complete."
+                  fi
+                  echo "Current files:"
+                  ls -la "$REPO_DIR"
+              env:
+                - name: GITHUB_ORG
+                  valueFrom:
+                    configMapKeyRef:
+                      name: k6-webhook-config
+                      key: github-org
+                - name: GITHUB_REPO
+                  valueFrom:
+                    configMapKeyRef:
+                      name: k6-webhook-config
+                      key: github-repo
+                - name: GIT_BRANCH
+                  valueFrom:
+                    configMapKeyRef:
+                      name: k6-webhook-config
+                      key: git-branch
+              volumeMounts:
+                - name: scripts
+                  mountPath: /scripts
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  cpu: 100m
+                  memory: 64Mi
+          volumes:
+            - name: scripts
+              persistentVolumeClaim:
+                claimName: k6-scripts

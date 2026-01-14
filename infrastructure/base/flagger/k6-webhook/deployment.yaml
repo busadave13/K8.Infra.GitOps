@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k6-webhook
+  namespace: flagger-system
+  labels:
+    app: k6-webhook
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: k6-webhook
+  template:
+    metadata:
+      labels:
+        app: k6-webhook
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "80"
+    spec:
+      serviceAccountName: k6-webhook
+      containers:
+        - name: webhook
+          image: ghcr.io/grafana/flagger-k6-webhook:latest
+          ports:
+            - containerPort: 80
+              name: http
+          env:
+            - name: K6_PROMETHEUS_RW_SERVER_URL
+              value: "http://prometheus-server.monitor.svc.cluster.local/api/v1/write"
+            - name: K6_PROMETHEUS_RW_TREND_AS_NATIVE_HISTOGRAM
+              value: "true"
+            - name: ENVIRONMENT
+              valueFrom:
+                configMapKeyRef:
+                  name: k6-webhook-config
+                  key: environment
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+              readOnly: true
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 80
+            initialDelaySeconds: 3
+            periodSeconds: 5
+      volumes:
+        - name: scripts
+          persistentVolumeClaim:
+            claimName: k6-scripts

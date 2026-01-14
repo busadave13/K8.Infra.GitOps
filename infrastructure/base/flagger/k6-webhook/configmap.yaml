@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k6-webhook-config
+  namespace: flagger-system
+data:
+  github-org: "busadave13"
+  github-repo: "Tests"
+  git-branch: "main"
+  environment: "dev"

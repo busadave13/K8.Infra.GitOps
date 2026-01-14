@@ -4,3 +4,4 @@ resources:
   - helmrelease.yaml
   - alertprovider.yaml
   - loadtester
+  - k6-webhook
